@@ -20,25 +20,30 @@ import org.apache.thrift.server.TThreadPoolServer;
  */
 public class GrafoServer {
     public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int nro_servers = 0;
+        int loop = 3;
         try {
-            GrafoHandler handler = new GrafoHandler();
-            GrafoBD.Processor processor = new GrafoBD.Processor(handler);
-            
-            Runnable connectClient = new Runnable() {
-                public void run() {
-                    connectClient(processor);
-                }
-            };
+            for(int i = 0; i < loop; i++){
+                GrafoHandler handler = new GrafoHandler();
+                GrafoBD.Processor processor = new GrafoBD.Processor(handler);
+                
+                Runnable connectClient = new Runnable() {
+                    public void run() {
+                        connectClient(processor,++nro_servers);
+                    }
+                };
 
-            new Thread(connectClient).start();
+                new Thread(connectClient).start();
+            }
         } catch (Exception x) {
             x.printStackTrace();
         }
     }
 
-    public static void connectClient(GrafoBD.Processor processor) {
+    public static void connectClient(GrafoBD.Processor processor, int nro_servers) {
         try {
-            TServerTransport serverTransport = new TServerSocket(9090);
+            TServerTransport serverTransport = new TServerSocket(9090+nro_servers);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport)
                                         .processor(processor));
             System.out.println("Starting up..");

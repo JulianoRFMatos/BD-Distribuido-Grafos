@@ -7,6 +7,13 @@ package GrafoBD;
 
 import GrafoBD.*;
 
+import org.apache.thrift.TException;
+import org.apache.thrift.TApplicationException;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TBinaryProtocol;
+
 import java.util.*;
 
 /**
@@ -17,143 +24,241 @@ public class GrafoHandler implements GrafoBD.Iface {
     private List<Vertice> listaVertices = new ArrayList<Vertice>();
     private List<Aresta> listaArestas = new ArrayList<Aresta>();
     private MenorCaminho shortestPath;
+    private AtomicBoolean inUse = new AtomicBoolean(false);
+    private GrafoBD.Client clientHandler;
+    private int server_num = 0;
     
+    public TProtocol setClientPort(int servidor) {
+        TTransport temp_transport = new TTransport(localhost, 9090+servidor);
+        TProtocol temp_protocol = new TProtocol(temp_transport);
+        //GrafoBD.Client temp_client = new GrafoBD.Client(temp_protocol);
+
+        return temp_protocol;
+    }
+
+    public void getVerticeServer(int nome_vertice) {
+        int vertice_server = nome_vertice%3;
+        clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+    }
+
+    public void getVerticeServer(Vertice vertice) {
+        int vertice_server = vertice.getNome()%3;
+        clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+    }
+
     @Override
-    public synchronized List<Vertice> getListaVertices() {
-        return this.listaVertices;
+    public List<Vertice> getListaVertices() {
+        if(inUse.compareAndSet(false,true)) {
+            List<Vertice> lista = this.listaVertices;
+            inUse.set(false);
+        }
+        return lista;
     }
     
     @Override
-    public synchronized List<Aresta> getListaArestas() {
-        return this.listaArestas;
+    public List<Aresta> getListaArestas() {
+        if(inUse.compareAndSet(false,true)) {
+            List<Aresta> lista = this.listaArestas;
+            inUse.set(false);
+        }
+        return lista;
     }
     
     @Override
-    public synchronized boolean insereVertice(Vertice vertice) {
-    	Iterator<Vertice> it = listaVertices.iterator();
-    	while(it.hasNext()){
-    		if(it.next().getNome() == vertice.getNome()) {
-    			return false;
-    		}
-    	}
-    	listaVertices.add(vertice);
+    public boolean insereVertice(Vertice vertice) {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+            Iterator<Vertice> it = clientHandler.getListaVertices().iterator();
+
+            while(it.hasNext()){
+                if(it.next().getNome() == vertice.getNome()) {
+                    inUse.set(false);
+                    return false;
+                }
+            }    
+            clientHandler.getListaVertices().add(vertice);
+            inUse.set(false);
+        }
     	return true;
     }
 
     @Override
-    public synchronized Vertice buscaVerticeNome(int nome) throws VerticeNotFound {
-        for(Vertice v : listaVertices) {
-            if(v.getNome() == nome) {
-                return v;
+    public Vertice buscaVerticeNome(int nome) throws VerticeNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(nome);
+            Vertice vertice;
+            for(Vertice v : clientHandler.getListaVertices()) {
+                if(v.getNome() == nome) {
+                    vertice = v;
+                }
             }
+            inUse.set(false);
+            return vertice;
         }
         throw new VerticeNotFound("Erro ao buscar vertice informado!");
     }
     
     @Override
-    public synchronized void editaVerticeCor(Vertice vertice, int cor) throws VerticeNotFound {
-		buscaVerticeNome(vertice.getNome()).setCor(cor);
+    public void editaVerticeCor(Vertice vertice, int cor) throws VerticeNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+            clientHandler.buscaVerticeNome(vertice.getNome()).setCor(cor);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized void editaVerticeDescr(Vertice vertice, String descricao) throws VerticeNotFound {
-    	buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
+    public void editaVerticeDescr(Vertice vertice, String descricao) throws VerticeNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+            clientHandler.buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
+            inUse.set(false);
+        }
     }
     
     @Override
     public void editaVerticePeso(Vertice vertice, double peso) throws VerticeNotFound {
-    	buscaVerticeNome(vertice.getNome()).setPeso(peso);
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+            clientHandler.buscaVerticeNome(vertice.getNome()).setPeso(peso);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized void removeVertice(Vertice vertice) throws ArestaNotFound {
-    	Iterator<Aresta> it = listaArestasVertice(vertice).iterator();
-    	while(it.hasNext()) {
-    		removeAresta(it.next());
-    	}
-    	listaVertices.remove(vertice);
+    public void removeVertice(Vertice vertice) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+        	Iterator<Aresta> it = clientHandler.listaArestasVertice(vertice).iterator();
+        	while(it.hasNext()) {
+        		clientHandler.removeAresta(it.next());
+        	}
+        	clientHandler.listaVertices.remove(vertice);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized boolean insereAresta(Aresta aresta) throws VerticeNotFound {
-    	buscaVerticeNome(aresta.getFirstVert());
-    	buscaVerticeNome(aresta.getSecondVert());
+    public boolean insereAresta(Aresta aresta) throws VerticeNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(aresta.getFirstVert());
+        	clientHandler.buscaVerticeNome(aresta.getFirstVert());
+        	clientHandler.buscaVerticeNome(aresta.getSecondVert());
 
-    	for(Aresta a : listaArestas) {
-    		if((a.getFirstVert() == aresta.getFirstVert() && a.getSecondVert() == aresta.getSecondVert())
-    			|| (a.getSecondVert() == aresta.getFirstVert() && a.getFirstVert() == aresta.getSecondVert()))
-    			return false;
-    	}
-
-	    if(aresta.getFirstVert() != aresta.getSecondVert()) {
-		    listaArestas.add(aresta);
-			return true;
-		}
+        	for(Aresta a : clientHandler.getListaArestas) {
+        		if((a.getFirstVert() == aresta.getFirstVert() && a.getSecondVert() == aresta.getSecondVert())
+        			|| (a.getSecondVert() == aresta.getFirstVert() && a.getFirstVert() == aresta.getSecondVert())) {
+                    inUse.set(false);
+        			return false;
+                }
+        	}
+		    clientHandler.getListaArestas.add(aresta);
+            inUse.set(false);
+        }
 		return false;
     }
     
     @Override
-    public synchronized Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound {
-        for(Aresta a : listaArestas) {
-            if(a.getFirstVert() == nomePrimeiroVert && a.getSecondVert() == nomeSegundoVert)
-                return a;
+    public Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(nomePrimeiroVert);
+            Aresta aresta;
+            for(Aresta a : clientHandler.getListaArestas) {
+                if(a.getFirstVert() == nomePrimeiroVert && a.getSecondVert() == nomeSegundoVert)
+                    aresta = a;
+            }
+            inUse.set(false);
+            return aresta;
         }
         throw new ArestaNotFound("Erro ao buscar aresta informada!");
     }
     
     @Override
-    public synchronized void editaArestaPeso(Aresta aresta, double peso) throws ArestaNotFound {
-		buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setPeso(peso);
+    public void editaArestaPeso(Aresta aresta, double peso) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(aresta.getFirstVert());
+            clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setPeso(peso);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized void editaArestaFlag(Aresta aresta, boolean flag) throws ArestaNotFound {
-		buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setFlag(flag);
+    public void editaArestaFlag(Aresta aresta, boolean flag) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(aresta.getFirstVert());
+            clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setFlag(flag);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized void editaArestaDescr(Aresta aresta, String descricao) throws ArestaNotFound {
-    	buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setDescricao(descricao);
+    public void editaArestaDescr(Aresta aresta, String descricao) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(aresta.getFirstVert());
+            clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setDescricao(descricao);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized void removeAresta(Aresta aresta) throws ArestaNotFound {
-    	listaArestas.remove(aresta);
+    public void removeAresta(Aresta aresta) throws ArestaNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(aresta.getFirstVert());
+            clientHandler.getListaArestas.remove(aresta);
+            inUse.set(false);
+        }
     }
     
     @Override
-    public synchronized List<Aresta> listaArestasVertice(Vertice vertice) {
-    	List<Aresta> arestasVert = new ArrayList<>();
-    	for(Aresta a : listaArestas) {
-    		if(a.getFirstVert() == vertice.getNome() || a.getSecondVert() == vertice.getNome())
-    			arestasVert.add(a);
-    	}
-    	return arestasVert;
+    public List<Aresta> listaArestasVertice(Vertice vertice) {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+        	List<Aresta> arestasVert = new ArrayList<>();
+        	for(Aresta a : clientHandler.getListaArestas) {
+        		if(a.getFirstVert() == vertice.getNome() || a.getSecondVert() == vertice.getNome())
+        			arestasVert.add(a);
+        	}
+            inUse.set(false);
+        }
+        return arestasVert;
     }
     
     @Override
-    public synchronized List<Vertice> listaVerticesVizinhos(Vertice vertice) throws VerticeNotFound {
-    	List<Vertice> verticesVizinhos = new ArrayList<>();
-        for(Aresta a : listaArestas) {
-            if(a.getFirstVert() == vertice.getNome()) {
-            	verticesVizinhos.add(buscaVerticeNome(a.getSecondVert()));
+    public List<Vertice> listaVerticesVizinhos(Vertice vertice) throws VerticeNotFound {
+        if(inUse.compareAndSet(false,true)) {
+            getVerticeServer(vertice);
+        	List<Vertice> verticesVizinhos = new ArrayList<>();
+            for(Aresta a : listaArestas) {
+                if(a.getFirstVert() == vertice.getNome()) {
+                	verticesVizinhos.add(clientHandler.buscaVerticeNome(a.getSecondVert()));
+                }
+                if(a.getSecondVert() == vertice.getNome()) {
+                	verticesVizinhos.add(clientHandler.buscaVerticeNome(a.getFirstVert()));
+                }
             }
-            if(a.getSecondVert() == vertice.getNome()) {
-            	verticesVizinhos.add(buscaVerticeNome(a.getFirstVert()));
-            }
+            inUse.set(false);
         }
         return verticesVizinhos;
     }
 
     @Override
-    public synchronized List<Vertice> procuraMenorCaminho(Vertice comeco, Vertice fim) {
-    	shortestPath = new MenorCaminho(this);
-    	shortestPath.execute(comeco);
-    	return shortestPath.getPath(fim);
+    public List<Vertice> procuraMenorCaminho(Vertice comeco, Vertice fim) {
+        if(inUse.compareAndSet(false,true)) {
+            List<Vertice> caminho = new ArrayList<>();
+        	shortestPath = new MenorCaminho(this);
+        	shortestPath.execute(comeco);
+            caminho = shortestPath.getPath(fim);
+            inUse.set(false);
+        }
+    	return caminho;
     }
 
     @Override
-    public synchronized double distanciaPercorrida(Vertice fim) {
-    	return shortestPath.getTotalDistance(fim);
+    public double distanciaPercorrida(Vertice fim) {
+        if(inUse.compareAndSet(false,true)) {
+            double distancia = shortestPath.getTotalDistance(fim);
+            inUse.set(false);
+        }
+    	return distancia;
     }
 }

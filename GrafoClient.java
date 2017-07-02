@@ -33,7 +33,18 @@ public class GrafoClient {
 
     public static void main(String[] args) throws Exception {
         try {
-            TTransport transport = new TSocket("localhost", 9090);
+        	Scanner sc = new Scanner(System.in);
+
+        	// RANDOMIZANDO PORTA
+        	/*
+        	Random rand = new Random();
+            TTransport transport = new TSocket("localhost", 9090+rand.nextInt(3));
+            transport.open();
+            */
+
+            // CLIENTE PASSA PORTA
+            int porta = sc.nextInt();
+            TTransport transport = new TSocket("localhost", porta);
             transport.open();
             
             TProtocol protocol = new TBinaryProtocol(transport);
@@ -47,8 +58,6 @@ public class GrafoClient {
             String descricao;
             boolean flag;
             boolean continua = true;
-            
-            Scanner sc = new Scanner(System.in);
             
             do {
             	try {
