@@ -14,23 +14,29 @@ import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.server.TThreadPoolServer;
 
+import java.util.*;
+
 /**
  *
  * @author Juliano
  */
 public class GrafoServer {
+    static final int port = 9090;
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        int nro_servers = 0;
-        int loop = 3;
+        System.out.print("Numero servidores: ");
+        int nro_servers = 3;//sc.nextInt();
         try {
-            for(int i = 0; i < loop; i++){
-                GrafoHandler handler = new GrafoHandler();
+            for(int i = 0; i < nro_servers; i++){
+                int n = i;
+                //int n = nro_servers;
+                GrafoHandler handler = new GrafoHandler(nro_servers,n);
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {
                     public void run() {
-                        connectClient(processor,++nro_servers);
+                        connectClient(processor,n);
                     }
                 };
 
@@ -43,10 +49,12 @@ public class GrafoServer {
 
     public static void connectClient(GrafoBD.Processor processor, int nro_servers) {
         try {
-            TServerTransport serverTransport = new TServerSocket(9090+nro_servers);
+            TServerTransport serverTransport = new TServerSocket(port+nro_servers);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport)
                                         .processor(processor));
-            System.out.println("Starting up..");
+            int porta = port+nro_servers;
+            //int port = nro_servers;
+            System.out.println("Starting up server.. "+porta);
             server.serve();
         } catch (Exception e) {
             e.printStackTrace();

@@ -41,5 +41,6 @@ service GrafoBD {
 	list<Aresta> listaArestasVertice(1: Vertice vertice),
 	list<Vertice> listaVerticesVizinhos(1: Vertice vertice) throws (1: VerticeNotFound err),
 	list<Vertice> procuraMenorCaminho(1: Vertice comeco, 2: Vertice fim),
-	double distanciaPercorrida(1: Vertice fim)
+	double distanciaPercorrida(1: Vertice fim),
+	void addElem(1: Vertice vertice)
 }

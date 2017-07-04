@@ -15,91 +15,169 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  * @author Juliano
  */
 public class GrafoHandler implements GrafoBD.Iface {
-    private List<Vertice> listaVertices = new ArrayList<Vertice>();
-    private List<Aresta> listaArestas = new ArrayList<Aresta>();
+    private List<Vertice> listaVertices;
+    private List<Aresta> listaArestas;
     private MenorCaminho shortestPath;
     private AtomicBoolean inUse = new AtomicBoolean(false);
     private GrafoBD.Client clientHandler;
-    private int server_num = 0;
+    private TTransport temp_transport;
+    private TProtocol temp_protocol;
+    private int total_servidores;
+    private int serverId;
+    private final int porta = 9090;
+
+    public GrafoHandler(int total_servidores, int serverId) {
+    	this.total_servidores = total_servidores;
+    	this.listaVertices = new ArrayList<Vertice>();
+    	this.listaArestas = new ArrayList<Aresta>();
+    	this.serverId = serverId;
+    }
     
-    public TProtocol setClientPort(int servidor) {
-        TTransport temp_transport = new TTransport(localhost, 9090+servidor);
-        TProtocol temp_protocol = new TProtocol(temp_transport);
-        //GrafoBD.Client temp_client = new GrafoBD.Client(temp_protocol);
 
-        return temp_protocol;
+    public TProtocol setClientPort(int servidor) throws TException {
+    	System.out.println("Nro Servidor -> "+(porta+servidor)
+    		+"\ntotal_servidores -> "+this.total_servidores);
+
+        this.temp_transport = new TSocket("localhost", porta+servidor);
+        this.temp_transport.open();
+        this.temp_protocol = new TBinaryProtocol(temp_transport);
+        return this.temp_protocol;
     }
 
-    public void getVerticeServer(int nome_vertice) {
-        int vertice_server = nome_vertice%3;
-        clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+    public void getVerticeServer(int nome_vertice) throws TException {
+        int vertice_server = nome_vertice%this.total_servidores;
+        this.clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+        System.out.println("VERTICE_SERVER -> "+vertice_server);
     }
 
-    public void getVerticeServer(Vertice vertice) {
-        int vertice_server = vertice.getNome()%3;
-        clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+    public void getVerticeServer(Vertice vertice) throws TException {
+        int vertice_server = vertice.getNome()%this.total_servidores;
+        this.clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
+        System.out.println("VERTICE_SERVER -> "+vertice_server);
+    }
+
+    public void fechaClient() {
+    	this.temp_transport.close();
+    }
+
+    public boolean verificaId(int serverId){
+    	if(this.serverId == serverId%this.total_servidores)
+    		return true;
+    	else
+    		return false;
+    }
+
+    @Override
+    public void addElem(Vertice vertice) {
+    	this.listaVertices.add(vertice);
     }
 
     @Override
     public List<Vertice> getListaVertices() {
-        if(inUse.compareAndSet(false,true)) {
-            List<Vertice> lista = this.listaVertices;
-            inUse.set(false);
-        }
-        return lista;
+    	System.out.println("instanciou lista\n");
+        return this.listaVertices;
     }
     
     @Override
     public List<Aresta> getListaArestas() {
-        if(inUse.compareAndSet(false,true)) {
-            List<Aresta> lista = this.listaArestas;
-            inUse.set(false);
-        }
-        return lista;
+        return this.listaArestas;
     }
     
     @Override
-    public boolean insereVertice(Vertice vertice) {
+    public boolean insereVertice(Vertice vertice) throws TException {
+    	Iterator<Vertice> it;
         if(inUse.compareAndSet(false,true)) {
-            getVerticeServer(vertice);
-            Iterator<Vertice> it = clientHandler.getListaVertices().iterator();
+        	if(!verificaId(vertice.getNome())) {
+        		System.out.println("\nverificaId falha\n");
+        		getVerticeServer(vertice);
 
-            while(it.hasNext()){
-                if(it.next().getNome() == vertice.getNome()) {
-                    inUse.set(false);
-                    return false;
-                }
-            }    
-            clientHandler.getListaVertices().add(vertice);
-            inUse.set(false);
+        		it = clientHandler.getListaVertices().iterator();
+	            while(it.hasNext()){
+	                if(it.next().getNome() == vertice.getNome()) {
+	                    inUse.set(false);
+	                    return false;
+	                }
+	            }
+	            
+	            clientHandler.addElem(vertice);
+	            //if(clientHandler.getListaVertices().add(vertice))
+	            	//System.out.println("\nadded\n");
+	            //else
+	            	System.out.println("\nwho knows wtf happened\n");
+	            fechaClient();
+        	}
+        	else {
+        		System.out.println("\nentrou else insert\n");
+	            it = this.listaVertices.iterator();
+	            while(it.hasNext()){
+	                if(it.next().getNome() == vertice.getNome()) {
+	                    inUse.set(false);
+	                    return false;
+	                }
+	            }
+	            this.listaVertices.add(vertice);
+			}
+			System.out.println("\nadded "+vertice.getNome()+"\n");
+			inUse.set(false);
         }
     	return true;
     }
 
     @Override
-    public Vertice buscaVerticeNome(int nome) throws VerticeNotFound {
+    public Vertice buscaVerticeNome(int nome) throws VerticeNotFound,TException {
+    	
         if(inUse.compareAndSet(false,true)) {
-            getVerticeServer(nome);
-            Vertice vertice;
-            for(Vertice v : clientHandler.getListaVertices()) {
-                if(v.getNome() == nome) {
-                    vertice = v;
-                }
-            }
-            inUse.set(false);
-            return vertice;
+			try{
+        		if(!verificaId(nome)) {
+        			System.out.println("\nverificaId falha\n");
+		            getVerticeServer(nome);
+
+		            if(clientHandler.getListaVertices().isEmpty()){
+		            	System.out.println("\nlista vazia\n");
+		            }
+		            else
+		            	System.out.println("\nfoi inserido\n");
+		            
+		            for(Vertice v : clientHandler.getListaVertices()) {
+		            	System.out.println("clientHandler nome: "+v.getNome()+"\n");
+		                if(v.getNome() == nome) {
+		                	inUse.set(false);
+		                	System.out.println("\nbusca vai retornar v\n");
+		                	fechaClient();
+		                    return v;
+		                }
+		            }
+		            System.out.println("\nbusca passou for\n");
+		            fechaClient();
+		        }
+		        else {
+		        	System.out.println("\nverifica id passa\n");
+		        	for(Vertice v : listaVertices) {
+		            	System.out.println("nome: "+v.getNome()+"\n");
+		                if(v.getNome() == nome) {
+		                	inUse.set(false);
+		                    return v;
+		                }
+		            }
+		            System.out.println("\nbusca passou for\n");
+		        }
+            } catch(TException te){
+        		System.out.println("busca === "+te.getMessage());
+        	}
+        	inUse.set(false);
         }
         throw new VerticeNotFound("Erro ao buscar vertice informado!");
     }
     
     @Override
-    public void editaVerticeCor(Vertice vertice, int cor) throws VerticeNotFound {
+    public void editaVerticeCor(Vertice vertice, int cor) throws VerticeNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
             clientHandler.buscaVerticeNome(vertice.getNome()).setCor(cor);
@@ -108,7 +186,7 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void editaVerticeDescr(Vertice vertice, String descricao) throws VerticeNotFound {
+    public void editaVerticeDescr(Vertice vertice, String descricao) throws VerticeNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
             clientHandler.buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
@@ -117,7 +195,7 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void editaVerticePeso(Vertice vertice, double peso) throws VerticeNotFound {
+    public void editaVerticePeso(Vertice vertice, double peso) throws VerticeNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
             clientHandler.buscaVerticeNome(vertice.getNome()).setPeso(peso);
@@ -126,44 +204,44 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void removeVertice(Vertice vertice) throws ArestaNotFound {
+    public void removeVertice(Vertice vertice) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
         	Iterator<Aresta> it = clientHandler.listaArestasVertice(vertice).iterator();
         	while(it.hasNext()) {
         		clientHandler.removeAresta(it.next());
         	}
-        	clientHandler.listaVertices.remove(vertice);
+        	clientHandler.getListaVertices().remove(vertice);
             inUse.set(false);
         }
     }
     
     @Override
-    public boolean insereAresta(Aresta aresta) throws VerticeNotFound {
+    public boolean insereAresta(Aresta aresta) throws VerticeNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(aresta.getFirstVert());
         	clientHandler.buscaVerticeNome(aresta.getFirstVert());
         	clientHandler.buscaVerticeNome(aresta.getSecondVert());
 
-        	for(Aresta a : clientHandler.getListaArestas) {
+        	for(Aresta a : clientHandler.getListaArestas()) {
         		if((a.getFirstVert() == aresta.getFirstVert() && a.getSecondVert() == aresta.getSecondVert())
         			|| (a.getSecondVert() == aresta.getFirstVert() && a.getFirstVert() == aresta.getSecondVert())) {
                     inUse.set(false);
         			return false;
                 }
         	}
-		    clientHandler.getListaArestas.add(aresta);
+		    clientHandler.getListaArestas().add(aresta);
             inUse.set(false);
         }
 		return false;
     }
     
     @Override
-    public Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound {
+    public Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(nomePrimeiroVert);
-            Aresta aresta;
-            for(Aresta a : clientHandler.getListaArestas) {
+            Aresta aresta = new Aresta();
+            for(Aresta a : clientHandler.getListaArestas()) {
                 if(a.getFirstVert() == nomePrimeiroVert && a.getSecondVert() == nomeSegundoVert)
                     aresta = a;
             }
@@ -174,7 +252,7 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void editaArestaPeso(Aresta aresta, double peso) throws ArestaNotFound {
+    public void editaArestaPeso(Aresta aresta, double peso) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(aresta.getFirstVert());
             clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setPeso(peso);
@@ -183,7 +261,7 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void editaArestaFlag(Aresta aresta, boolean flag) throws ArestaNotFound {
+    public void editaArestaFlag(Aresta aresta, boolean flag) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(aresta.getFirstVert());
             clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setFlag(flag);
@@ -192,7 +270,7 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void editaArestaDescr(Aresta aresta, String descricao) throws ArestaNotFound {
+    public void editaArestaDescr(Aresta aresta, String descricao) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(aresta.getFirstVert());
             clientHandler.buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setDescricao(descricao);
@@ -201,20 +279,21 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public void removeAresta(Aresta aresta) throws ArestaNotFound {
+    public void removeAresta(Aresta aresta) throws ArestaNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(aresta.getFirstVert());
-            clientHandler.getListaArestas.remove(aresta);
+            clientHandler.getListaArestas().remove(aresta);
             inUse.set(false);
         }
     }
     
     @Override
-    public List<Aresta> listaArestasVertice(Vertice vertice) {
+    public List<Aresta> listaArestasVertice(Vertice vertice) throws TException{
+    	List<Aresta> arestasVert = new ArrayList<>();
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
-        	List<Aresta> arestasVert = new ArrayList<>();
-        	for(Aresta a : clientHandler.getListaArestas) {
+        	arestasVert = new ArrayList<>();
+        	for(Aresta a : clientHandler.getListaArestas()) {
         		if(a.getFirstVert() == vertice.getNome() || a.getSecondVert() == vertice.getNome())
         			arestasVert.add(a);
         	}
@@ -224,11 +303,11 @@ public class GrafoHandler implements GrafoBD.Iface {
     }
     
     @Override
-    public List<Vertice> listaVerticesVizinhos(Vertice vertice) throws VerticeNotFound {
+    public List<Vertice> listaVerticesVizinhos(Vertice vertice) throws VerticeNotFound,TException {
+    	List<Vertice> verticesVizinhos = new ArrayList<>();
         if(inUse.compareAndSet(false,true)) {
             getVerticeServer(vertice);
-        	List<Vertice> verticesVizinhos = new ArrayList<>();
-            for(Aresta a : listaArestas) {
+            for(Aresta a : clientHandler.getListaArestas()) {
                 if(a.getFirstVert() == vertice.getNome()) {
                 	verticesVizinhos.add(clientHandler.buscaVerticeNome(a.getSecondVert()));
                 }
@@ -243,8 +322,8 @@ public class GrafoHandler implements GrafoBD.Iface {
 
     @Override
     public List<Vertice> procuraMenorCaminho(Vertice comeco, Vertice fim) {
+    	List<Vertice> caminho = new ArrayList<>();
         if(inUse.compareAndSet(false,true)) {
-            List<Vertice> caminho = new ArrayList<>();
         	shortestPath = new MenorCaminho(this);
         	shortestPath.execute(comeco);
             caminho = shortestPath.getPath(fim);
@@ -255,8 +334,9 @@ public class GrafoHandler implements GrafoBD.Iface {
 
     @Override
     public double distanciaPercorrida(Vertice fim) {
+    	double distancia = 0;
         if(inUse.compareAndSet(false,true)) {
-            double distancia = shortestPath.getTotalDistance(fim);
+            distancia = shortestPath.getTotalDistance(fim);
             inUse.set(false);
         }
     	return distancia;

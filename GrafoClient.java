@@ -43,9 +43,15 @@ public class GrafoClient {
             */
 
             // CLIENTE PASSA PORTA
-            int porta = sc.nextInt();
-            TTransport transport = new TSocket("localhost", porta);
-            transport.open();
+            TTransport transport = null;
+            try {
+            	System.out.print("Numero porta: ");
+	            int porta = sc.nextInt();
+	            transport = new TSocket("localhost", porta);
+	            transport.open();
+	        } catch (InputMismatchException ime) {
+	        	System.out.println("Porta invalida!");
+	        }
             
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
@@ -65,6 +71,12 @@ public class GrafoClient {
 	                String atributo = "";
 	                int opcao = -1;        
 	                
+					/*System.out.println("\nvertices\n");
+	                for(int i = 0;i<3;i++){
+	                	System.out.println(verticeToString(v));
+	                }
+	                System.out.println("\n\n");*/
+
 	                System.out.print("\n----------------------------------------"
 	                        + "\n1 - Create"
 	                        + "\n2 - Read"
@@ -77,7 +89,7 @@ public class GrafoClient {
 	                        + "\n0 - Sair"
 	                        + "\nOpcao: ");                
 	                opcaoMenu = sc.nextInt();
-	                
+
 	                switch(opcaoMenu) {
 	                    case 1:
 	                        //CREATE
