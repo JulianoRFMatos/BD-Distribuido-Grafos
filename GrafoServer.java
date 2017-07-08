@@ -30,8 +30,7 @@ public class GrafoServer {
         try {
             for(int i = 0; i < nro_servers; i++){
                 int n = i;
-                //int n = nro_servers;
-                GrafoHandler handler = new GrafoHandler(nro_servers,n);
+                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,n);
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {

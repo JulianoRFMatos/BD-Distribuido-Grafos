@@ -46,7 +46,8 @@ public class GrafoClient {
             TTransport transport = null;
             try {
             	System.out.print("Numero porta: ");
-	            int porta = sc.nextInt();
+	            //int porta = sc.nextInt();
+	            int porta = 9090;
 	            transport = new TSocket("localhost", porta);
 	            transport.open();
 	        } catch (InputMismatchException ime) {
@@ -65,17 +66,17 @@ public class GrafoClient {
             boolean flag;
             boolean continua = true;
             
+            // PARA TESTES
+            client.insereVertice(new Vertice(0,0,"0",0));
+            client.insereVertice(new Vertice(1,1,"1",1));
+            client.insereVertice(new Vertice(2,2,"2",2));
+            client.insereAresta(new Aresta(1,2,5,true,"aresta"));
+
             do {
             	try {
             		int opcaoMenu = -1;
 	                String atributo = "";
 	                int opcao = -1;        
-	                
-					/*System.out.println("\nvertices\n");
-	                for(int i = 0;i<3;i++){
-	                	System.out.println(verticeToString(v));
-	                }
-	                System.out.println("\n\n");*/
 
 	                System.out.print("\n----------------------------------------"
 	                        + "\n1 - Create"
@@ -161,7 +162,8 @@ public class GrafoClient {
 	                            	nomeVert = sc.nextInt();
 	                        	
 	                            	vertice = client.buscaVerticeNome(nomeVert);
-	                        		System.out.println(verticeToString(vertice));
+	                            	if(vertice != null)
+	                        			System.out.println(verticeToString(vertice));
 
 	                            } 
 	                            else if(opcao == 2) {
@@ -267,7 +269,7 @@ public class GrafoClient {
 	                        }
 	                        
 	                        break;
-	                        
+	                    
 	                    case 4:
 	                        //DELETE
 	                        try {
@@ -304,21 +306,21 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                        
+	                    /*    
 	                    case 5:
 	                        //LISTA VERTICES DE ARESTA
 	                    	int count = 1;
 	                    	try {
 	                    		System.out.print("\n----------------------------------------");
-	                    		if(client.getListaArestas().isEmpty()) {
+	                    		/*if(client.getListaArestas().isEmpty()) {
 	                    			System.out.println("Nao foi inserida nenhuma aresta!");
 	                    			break;
-	                    		}
+	                    		}*/
 
-	                    		for(Aresta a : client.getListaArestas()) {
+	                    		/*for(Aresta a : client.getListaArestas()) {
 	                    			System.out.println("Aresta #" + count++ + " -> " + a.getFirstVert()
 	                    				+ " | " + a.getSecondVert());
-	                    		}
+	                    		//}
                                 
                                 System.out.print("\nQual aresta...\nVertice 1 e Vertice 2 (x y): ");
 			                    nomeVert = sc.nextInt();
@@ -338,7 +340,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                        
+	                        */
 	                    case 6:
 	                        //LISTA ARESTAS DE VERTICE
 	                        try {
@@ -362,7 +364,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                        
+	                        /*
 	                    case 7:
 	                        //LISTA VERTICES VIZINHOS DE VERTICE
 	                        try {
@@ -413,7 +415,7 @@ public class GrafoClient {
 	                        	System.out.println("Nao existe caminho possivel entre os dois vertices");
 	                        }
 
-                        	break;
+                        	break;*/
 	                        
 	                    case 0:
 	                        System.out.println("Saindo....");
