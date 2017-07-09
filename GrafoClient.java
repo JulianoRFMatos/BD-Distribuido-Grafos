@@ -71,6 +71,7 @@ public class GrafoClient {
             client.insereVertice(new Vertice(1,1,"1",1));
             client.insereVertice(new Vertice(2,2,"2",2));
             client.insereAresta(new Aresta(1,2,5,true,"aresta"));
+            client.insereAresta(new Aresta(1,2,3,false,"repetiu"));
 
             do {
             	try {
@@ -306,27 +307,19 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                    /*    
+	                       
 	                    case 5:
 	                        //LISTA VERTICES DE ARESTA
 	                    	int count = 1;
 	                    	try {
 	                    		System.out.print("\n----------------------------------------");
-	                    		/*if(client.getListaArestas().isEmpty()) {
-	                    			System.out.println("Nao foi inserida nenhuma aresta!");
-	                    			break;
-	                    		}*/
-
-	                    		/*for(Aresta a : client.getListaArestas()) {
-	                    			System.out.println("Aresta #" + count++ + " -> " + a.getFirstVert()
-	                    				+ " | " + a.getSecondVert());
-	                    		//}
                                 
                                 System.out.print("\nQual aresta...\nVertice 1 e Vertice 2 (x y): ");
 			                    nomeVert = sc.nextInt();
 			                    nomeVert2 = sc.nextInt();
 
-			                    if(client.buscaArestaNome(nomeVert,nomeVert2) != null) { 
+			                    if(client.buscaArestaNome(nomeVert,nomeVert2) != null) {
+			                    	System.out.println("\nAresta encontrada! Vertices...\n");
 									System.out.println("\nVertice 1\n" + verticeToString(client.buscaVerticeNome(nomeVert)));
 									System.out.println("\nVertice 2\n" + verticeToString(client.buscaVerticeNome(nomeVert2)));
 								}
@@ -340,7 +333,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                        */
+	                        
 	                    case 6:
 	                        //LISTA ARESTAS DE VERTICE
 	                        try {
@@ -348,7 +341,7 @@ public class GrafoClient {
 	                                +"\nQual vertice...");
 	                            nomeVert = sc.nextInt();
 
-	                            Iterator<Aresta> it = client.listaArestasVertice(client.buscaVerticeNome(nomeVert)).iterator();
+	                            Iterator<Aresta> it = client.listaArestasVerticeVerificacao(client.buscaVerticeNome(nomeVert),false).iterator();
 
 	                            System.out.println("\nArestas do vertice "+nomeVert);
 	                            while(it.hasNext()) {
@@ -364,7 +357,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                        /*
+	                        
 	                    case 7:
 	                        //LISTA VERTICES VIZINHOS DE VERTICE
 	                        try {
@@ -372,7 +365,11 @@ public class GrafoClient {
 	                            	+"\nListar vertices vizinhos..\nQual vertice...");
 	                            nomeVert = sc.nextInt();
 
-	                            Iterator<Vertice> it = client.listaVerticesVizinhos(client.buscaVerticeNome(nomeVert)).iterator();
+	                            vertice = client.buscaVerticeNome(nomeVert);
+	                            System.out.println("Buscou");
+	                            //Iterator<Vertice> it = client.listaVerticesVizinhos(client.buscaVerticeNome(nomeVert)).iterator();
+								Iterator<Vertice> it = client.listaVerticesVizinhos(vertice).iterator();
+								System.out.println("Instanciou iterator");
 
 	                            System.out.println("\nVertices vizinhos ao vertice "+nomeVert);
 	                            while(it.hasNext()) {
@@ -388,7 +385,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-
+	                    /*
                         case 8:
                         	try {
 	                        	System.out.println("----------------------------------------"

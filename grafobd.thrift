@@ -40,5 +40,7 @@ service GrafoBD {
 	void editaArestaDescr(1: Aresta aresta, 2: string descricao) throws (1: ArestaNotFound err),
 	void removeAresta(1: Aresta aresta) throws (1: ArestaNotFound err),
 	void removeArestaReplica(1: Aresta aresta) throws (1: ArestaNotFound err),
+	list<Aresta> listaArestasVerticeVerificacao(1: Vertice vertice, 2: bool passa),
 	list<Aresta> listaArestasVertice(1: Vertice vertice),
+	list<Vertice> listaVerticesVizinhos(1: Vertice vertice) throws (1: VerticeNotFound err)
 }
