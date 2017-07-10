@@ -369,10 +369,7 @@ public class GrafoClient {
 	                            nomeVert = sc.nextInt();
 
 	                            vertice = client.buscaVerticeNome(nomeVert);
-	                            System.out.println("Buscou");
-	                            //Iterator<Vertice> it = client.listaVerticesVizinhos(client.buscaVerticeNome(nomeVert)).iterator();
 								Iterator<Vertice> it = client.listaVerticesVizinhos(vertice).iterator();
-								System.out.println("Instanciou iterator");
 
 	                            System.out.println("\nVertices vizinhos ao vertice "+nomeVert);
 	                            while(it.hasNext()) {
@@ -428,6 +425,10 @@ public class GrafoClient {
 	                }
 	            } catch (InputMismatchException ime) {
 		            System.out.println("Valor digitado invalido!");
+		            sc.nextLine();
+		        } catch (TApplicationException tae) {
+		            System.out.println("Erro interno do servidor!");
+		            //client.setInUseFalse();
 		            sc.nextLine();
 		        }
             } while(continua);

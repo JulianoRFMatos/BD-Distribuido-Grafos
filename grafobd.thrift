@@ -1,18 +1,18 @@
 namespace java GrafoBD
 
 struct Vertice {
-	1: required i32 nome,
-	2: required i32 cor,
-	3: required string descricao,
-	4: required double peso
+	1: i32 nome,
+	2: i32 cor,
+	3: string descricao,
+	4: double peso
 }
 
 struct Aresta {
-	1: required i32 firstVert,
-	2: required i32 secondVert,
-	3: required double peso,
-	4: required bool flag,
-	5: required string descricao
+	1: i32 firstVert,
+	2: i32 secondVert,
+	3: double peso,
+	4: bool flag,
+	5: string descricao
 }
 
 exception VerticeNotFound {
@@ -26,6 +26,7 @@ exception ArestaNotFound {
 service GrafoBD {
 	map<i32,Vertice> getHashVertices(),
 	map<list<i32>,Aresta> getHashArestas(),
+	void setInUseFalse(),
 	bool insereVertice(1: Vertice vertice),
 	Vertice buscaVerticeNomeControle(1: i32 nome, 2: bool controle) throws (1: VerticeNotFound err),
 	Vertice buscaVerticeNome(1: i32 nome) throws (1: VerticeNotFound err),
