@@ -72,6 +72,7 @@ public class GrafoClient {
             client.insereVertice(new Vertice(2,2,"2",2));
             client.insereAresta(new Aresta(1,2,5,true,"aresta"));
             client.insereAresta(new Aresta(1,2,3,false,"repetiu"));
+            client.insereAresta(new Aresta(2,0,3,false,"2 para 0"));
 
             do {
             	try {
@@ -173,7 +174,7 @@ public class GrafoClient {
 	                            	nomeVert = sc.nextInt();
 	                            	nomeVert2 = sc.nextInt();
 
-	                            	aresta = client.buscaArestaNome(nomeVert,nomeVert2);
+	                            	aresta = client.buscaArestaNomeControle(nomeVert,nomeVert2, false);
 	                        		System.out.println(arestaToString(aresta));
 
 	                            } else {
@@ -201,7 +202,7 @@ public class GrafoClient {
 	                            if(opcao == 1) {
 	                                System.out.print("\nQual vertice... : ");
 	                                nomeVert = sc.nextInt();
-	                                vertice = client.buscaVerticeNome(nomeVert);
+	                                vertice = client.buscaVerticeNomeControle(nomeVert,false);
 	                                
 	                                System.out.println(verticeToString(vertice));
 
@@ -232,7 +233,7 @@ public class GrafoClient {
 	                                nomeVert = sc.nextInt();
 	                                nomeVert2 = sc.nextInt();
 
-	                                aresta = client.buscaArestaNome(nomeVert,nomeVert2);
+	                                aresta = client.buscaArestaNomeControle(nomeVert, nomeVert2, false);
 	                                System.out.println(arestaToString(aresta));
 	                                
 	                                System.out.println("\nAtributo a modificar...(peso,flag,descricao)");
@@ -283,7 +284,7 @@ public class GrafoClient {
 	                                System.out.println("Qual vertice...");
 	                                nomeVert = sc.nextInt();
 
-	                                client.removeVertice(client.buscaVerticeNome(nomeVert));
+	                                client.removeVertice(client.buscaVerticeNomeControle(nomeVert,false));
 	                            }
 	                            if(opcao == 2) {
 	                                System.out.print("\nQual aresta..."
@@ -291,7 +292,7 @@ public class GrafoClient {
 	                                nomeVert = sc.nextInt();
 	                                nomeVert2 = sc.nextInt();
 
-	                                client.removeAresta(client.buscaArestaNome(nomeVert,nomeVert2));
+	                                client.removeArestaControle(client.buscaArestaNomeControle(nomeVert,nomeVert2,false),false);
 	                            }
 	                            else {
 	                                System.out.println("Retornando...");
@@ -318,11 +319,13 @@ public class GrafoClient {
 			                    nomeVert = sc.nextInt();
 			                    nomeVert2 = sc.nextInt();
 
-			                    if(client.buscaArestaNome(nomeVert,nomeVert2) != null) {
+			                    if(client.buscaArestaNomeControle(nomeVert,nomeVert2,false) != null) {
 			                    	System.out.println("\nAresta encontrada! Vertices...\n");
-									System.out.println("\nVertice 1\n" + verticeToString(client.buscaVerticeNome(nomeVert)));
-									System.out.println("\nVertice 2\n" + verticeToString(client.buscaVerticeNome(nomeVert2)));
+									System.out.println("\nVertice 1\n" + verticeToString(client.buscaVerticeNomeControle(nomeVert,false)));
+									System.out.println("\nVertice 2\n" + verticeToString(client.buscaVerticeNomeControle(nomeVert2,false)));
 								}
+								else
+									System.out.println("\nlista vertices aresta falhou\n");
 	                    	} catch (InputMismatchException ime) {
 	                    		System.out.println("Valor digitado incorreto");
 	                    		sc.nextLine();
@@ -341,7 +344,7 @@ public class GrafoClient {
 	                                +"\nQual vertice...");
 	                            nomeVert = sc.nextInt();
 
-	                            Iterator<Aresta> it = client.listaArestasVerticeVerificacao(client.buscaVerticeNome(nomeVert),false).iterator();
+	                            Iterator<Aresta> it = client.listaArestasVerticeControle(client.buscaVerticeNomeControle(nomeVert,false),false).iterator();
 
 	                            System.out.println("\nArestas do vertice "+nomeVert);
 	                            while(it.hasNext()) {

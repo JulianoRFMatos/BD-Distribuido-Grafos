@@ -32,6 +32,8 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     private int total_servidores;
     private int serverId;
     private final int porta = 9090;
+    private final String msgErroVertice = "Erro ao buscar vertice informado!";
+    private final String msgErroAresta = "Erro ao buscar aresta informada!";
 
     public GrafoHandlerHS(int total_servidores, int serverId) {    	
     	this.hashVertices = new HashMap<>();
@@ -62,6 +64,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         System.out.println("VERTICE_SERVER -> "+vertice_server);
     }
 
+    // INUTILIZADO
     public void fechaTransport() {
     	this.temp_transport.close();
         System.out.println("FECHOU TRANSPORT\n");
@@ -98,49 +101,63 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
                 if(!this.hashVertices.containsKey(vertice.getNome())){
                 	this.hashVertices.put(vertice.getNome(),vertice);
                     inUse.set(false);
-                    System.out.println("\nadded vertice "+vertice.getNome()+"\n");
+                    System.out.println("\nADICIONOU VERTICE "+vertice.getNome()+"\n");
                     return true;
                 }
 			}
+			inUse.set(false);
         }
     	return false;
     }
 
     @Override
-    public synchronized Vertice buscaVerticeNome(int nome) throws VerticeNotFound, TException { 
-    	try{
-        	//if(inUse.compareAndSet(false,true)) {
-        		if(!verificaId(nome)) {
-		            getVerticeServer(nome);
-                    //inUse.set(false);
-                    return clientHandler.buscaVerticeNome(nome);
-		        }
-		        else {
-                    if(this.hashVertices.containsKey(nome)){
-                        //inUse.set(false);
-                        System.out.println("\nreturning vertex -> "+nome);
-                        return this.hashVertices.get(nome);
-                    }
-		    	}
-		   // }
-        } finally {
-    		//inUse.set(false);
+    public Vertice buscaVerticeNomeControle(int nome, boolean controle) throws VerticeNotFound, TException {    	
+    	if(controle) {
+    		return buscaVerticeNome(nome);
     	}
-        
-        throw new VerticeNotFound("Erro ao buscar vertice informado!");
+    	else {
+    		try {
+	    		if(inUse.compareAndSet(false,true)) {
+	    			Vertice v = buscaVerticeNome(nome);
+	    			inUse.set(false);
+	    			return v;
+	    		}
+	    	} catch (VerticeNotFound vnf) {
+		    	inUse.set(false);
+		    	throw new VerticeNotFound(msgErroVertice);
+		    }
+	    }
+	
+	    return null;
     }
+
+    @Override
+    public Vertice buscaVerticeNome(int nome) throws VerticeNotFound, TException { 
+		if(!verificaId(nome)) {
+            getVerticeServer(nome);
+            return clientHandler.buscaVerticeNome(nome);
+        }
+        else {
+            if(this.hashVertices.containsKey(nome)){
+                System.out.println("\nRETORNANDO VERTICE -> "+nome);
+                return this.hashVertices.get(nome);
+            }
+            else
+            	throw new VerticeNotFound(msgErroVertice);
+    	}
+	}	
     
     @Override
     public void editaVerticeCor(Vertice vertice, int cor) throws VerticeNotFound,TException {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(vertice.getNome())) {
 	            getVerticeServer(vertice);
-                inUse.set(false);
                 clientHandler.editaVerticeCor(vertice,cor);
+                inUse.set(false);
 	        }
 	        else {
-                inUse.set(false);
 	        	buscaVerticeNome(vertice.getNome()).setCor(cor);
+                inUse.set(false);
 	        }
         }
     }
@@ -150,12 +167,12 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(vertice.getNome())) {
         		getVerticeServer(vertice);
-                inUse.set(false);
             	clientHandler.editaVerticeDescr(vertice,descricao);	
+            	inUse.set(false);
         	}
             else {
-                inUse.set(false);
             	buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
+                inUse.set(false);
             }
         }
     }
@@ -165,12 +182,12 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(vertice.getNome())) {
 				getVerticeServer(vertice);
-                inUse.set(false);
             	clientHandler.editaVerticePeso(vertice,peso);
+            	inUse.set(false);
         	}
             else {
-                inUse.set(false);
             	buscaVerticeNome(vertice.getNome()).setPeso(peso);
+            	inUse.set(false);
             }
         }
     }
@@ -180,52 +197,70 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
             if(!verificaId(vertice.getNome())) {
                 getVerticeServer(vertice);
-                inUse.set(false);
                 clientHandler.removeVertice(vertice);
+                inUse.set(false);
             }
             else {
-            	inUse.set(false);
-            	Iterator<Aresta> it = listaArestasVertice(vertice).iterator();
-            	
+            	Iterator<Aresta> it = listaArestasVerticeControle(vertice,true).iterator();
             	while(it.hasNext()) {
-            		removeAresta(it.next());
+            		removeArestaControle(it.next(),true);
             	}
-                inUse.set(false);
                 hashVertices.remove(vertice.getNome());
+                inUse.set(false);
             }
         }
     }
     
     @Override
     public boolean insereAresta(Aresta aresta) throws VerticeNotFound, TException {
-    	buscaVerticeNome(aresta.getFirstVert());
-	    buscaVerticeNome(aresta.getSecondVert());
-
         if(inUse.compareAndSet(false,true)) {
+
+        	// BUSCA 1o VERTICE
+        	/*if(verificaId(aresta.getFirstVert())) 
+        		buscaVerticeNomeControle(aresta.getFirstVert(),true);
+        	else {
+        		getVerticeServer(aresta.getFirstVert());
+        		clientHandler.buscaVerticeNomeControle(aresta.getFirstVert(),false);
+        	}
+
+        	// BUSCA 2o VERTICE
+        	if(verificaId(aresta.getSecondVert())) {
+        		buscaVerticeNomeControle(aresta.getSecondVert(),true);
+        	}
+        	else{
+        		getVerticeServer(aresta.getSecondVert());
+        		clientHandler.buscaVerticeNomeControle(aresta.getSecondVert(),false);
+        	}*/
+
         	if(!verificaId(aresta.getFirstVert())) {
     			getVerticeServer(aresta.getFirstVert());
-	    	   	clientHandler.insereArestaReplica(aresta);
-	        	inUse.set(false);
 	        	clientHandler.insereAresta(aresta);
+	        	inUse.set(false);
 	        	return true;
         	}
             else {
+            	buscaVerticeNomeControle(aresta.getFirstVert(),true);
+            	buscaVerticeNomeControle(aresta.getSecondVert(),true);
+
+            	insereArestaReplica(aresta);
             	List<Integer> arestaKey = new ArrayList<>();
             	arestaKey.add(aresta.getFirstVert());
             	arestaKey.add(aresta.getSecondVert());
 
             	if(!hashArestas.containsKey(arestaKey)) {
             		hashArestas.put(arestaKey,aresta);
-            		System.out.println("\nadded in server "+this.serverId+"\n");
+            		System.out.println("\nINSERIU ARESTA NO SERVER "+this.serverId+"\n");
             		inUse.set(false);
             		return true;
             	}
             	else
-            		System.out.println("\ninserearesta falhou\n");
-            }
-            inUse.set(false);
-        }
+            		System.out.println("\ninserearesta falhou\n"
+            			+"aresta 1 = "+aresta.getFirstVert()
+            			+"\naresta 2 = "+aresta.getSecondVert()+"\n");
 
+            	inUse.set(false);           	
+            }
+        }
 		return false;
     }
 
@@ -233,7 +268,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     public boolean insereArestaReplica(Aresta aresta) throws VerticeNotFound, TException {
     	if(!verificaId(aresta.getSecondVert())) {
 			getVerticeServer(aresta.getSecondVert());
-			inUse.set(false);
 			clientHandler.insereArestaReplica(aresta);
 			return true;
     	}
@@ -243,39 +277,52 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	arestaKey.add(aresta.getSecondVert());
         	if(!hashArestas.containsKey(arestaKey)) {
         		hashArestas.put(arestaKey,aresta);
-        		System.out.println("\nadded in server "+this.serverId+"\n");
-        		inUse.set(false);
+        		System.out.println("\nINSERIU REPLICA NO SERVER "+this.serverId+"\n");
         		return true;
         	}
-        	inUse.set(false);
         }
         return false;
     }
     
     @Override
-    public Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound,TException {
-    	try{
-    		if(inUse.compareAndSet(false,true)) {
-	        	if(!verificaId(nomePrimeiroVert)) {
-	        		getVerticeServer(nomePrimeiroVert);
-	        		inUse.set(false);
-		            return clientHandler.buscaArestaNome(nomePrimeiroVert,nomeSegundoVert);
-	        	}
-	        	else {
-	        		List<Integer> arestaKey = new ArrayList<>();
-	            	arestaKey.add(nomePrimeiroVert);
-	            	arestaKey.add(nomeSegundoVert);
-	        		if(hashArestas.containsKey(arestaKey)) {
-	        			inUse.set(false);
-	        			return hashArestas.get(arestaKey);
-	        		}
-	        	}
-			}
-    	} finally {
-    		inUse.set(false);
+    public Aresta buscaArestaNomeControle(int nomePrimeiroVert, int nomeSegundoVert, boolean controle) throws ArestaNotFound,TException {
+    	if(controle) {
+    		return buscaArestaNome(nomePrimeiroVert,nomeSegundoVert);
     	}
+    	else {
+    		try {
+	    		Aresta a = new Aresta();
+	    		System.out.println("\nCRIOU ARESTA | inUse = "+inUse+"\n");
+	    		if(inUse.compareAndSet(false,true)) {
+	    			System.out.println("\nVAI BUSCAR ARESTA\n");
+		    		a = buscaArestaNome(nomePrimeiroVert,nomeSegundoVert);
+		    		inUse.set(false);
+		    		return a;
+		    	}
+		    } catch (ArestaNotFound anf) {
+		    	inUse.set(false);
+		    	throw new ArestaNotFound(msgErroAresta);
+		    }
+	    }
+	    return null;
+    }
 
-        throw new ArestaNotFound("Erro ao buscar aresta informada!");
+    @Override
+    public Aresta buscaArestaNome(int nomePrimeiroVert, int nomeSegundoVert) throws ArestaNotFound,TException {
+    	if(!verificaId(nomePrimeiroVert)) {
+    		getVerticeServer(nomePrimeiroVert);
+            return clientHandler.buscaArestaNome(nomePrimeiroVert,nomeSegundoVert);
+    	}
+    	else {
+    		List<Integer> arestaKey = new ArrayList<>();
+        	arestaKey.add(nomePrimeiroVert);
+        	arestaKey.add(nomeSegundoVert);
+    		if(hashArestas.containsKey(arestaKey)) {
+    			return hashArestas.get(arestaKey);
+    		}
+    		else
+    			throw new ArestaNotFound(msgErroAresta);
+    	}
     }
 
     @Override
@@ -283,14 +330,26 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(aresta.getFirstVert())) {
         		getVerticeServer(aresta.getFirstVert());
-        		inUse.set(false);
         		clientHandler.editaArestaPeso(aresta,peso);
+        		inUse.set(false);
         	}
         	else {
+        		editaArestaReplicaPeso(aresta,peso);
+        		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setPeso(peso);
         		inUse.set(false);
-        		buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setPeso(peso);
         	}
         }
+    }
+
+    @Override
+    public void editaArestaReplicaPeso(Aresta aresta, double peso) throws ArestaNotFound,TException {
+    	if(!verificaId(aresta.getSecondVert())) {
+    		getVerticeServer(aresta.getSecondVert());
+    		clientHandler.editaArestaReplicaPeso(aresta,peso);
+    	}
+    	else {
+    		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setPeso(peso);
+    	}
     }
     
     @Override
@@ -298,14 +357,26 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(aresta.getFirstVert())) {
         		getVerticeServer(aresta.getFirstVert());
-        		inUse.set(false);
         		clientHandler.editaArestaFlag(aresta,flag);
+        		inUse.set(false);
         	}
         	else {
+        		editaArestaReplicaFlag(aresta,flag);
+        		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setFlag(flag);
         		inUse.set(false);
-        		buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setFlag(flag);
         	}
         }
+    }
+
+    @Override
+    public void editaArestaReplicaFlag(Aresta aresta, boolean flag) throws ArestaNotFound,TException {
+    	if(!verificaId(aresta.getSecondVert())) {
+    		getVerticeServer(aresta.getSecondVert());
+    		clientHandler.editaArestaReplicaFlag(aresta,flag);
+    	}
+    	else {
+    		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), false).setFlag(flag);
+    	}
     }
     
     @Override
@@ -313,59 +384,73 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(aresta.getFirstVert())) {
         		getVerticeServer(aresta.getFirstVert());
-        		inUse.set(false);
         		clientHandler.editaArestaDescr(aresta,descricao);
+        		inUse.set(false);
         	}
         	else {
-        		inUse.set(false);
-        		buscaArestaNome(aresta.getFirstVert(), aresta.getSecondVert()).setDescricao(descricao);
-        	}
-        }
-    }
-    
-    @Override
-    public void removeAresta(Aresta aresta) throws ArestaNotFound, TException {
-    	System.out.println("\nVALOR DE INUSE ==  "+inUse);
-        if(inUse.compareAndSet(false,true)) {
-        	System.out.println("\nENTROU REMOVEARESTA");
-        	if(!verificaId(aresta.getFirstVert())) {
-        		getVerticeServer(aresta.getFirstVert());
-        		clientHandler.removeArestaReplica(aresta);
-        		inUse.set(false);
-            	clientHandler.removeAresta(aresta);
-        	}
-        	else {
-        		List<Integer> arestaKey = new ArrayList<>();
-            	arestaKey.add(aresta.getFirstVert());
-            	arestaKey.add(aresta.getSecondVert());
-        		hashArestas.remove(arestaKey);
-        		System.out.println("\nremoveu aresta em sv "+serverId);
+        		editaArestaReplicaDescr(aresta,descricao);
+        		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setDescricao(descricao);
         		inUse.set(false);
         	}
         }
     }
 
     @Override
-    public void removeArestaReplica(Aresta aresta) throws ArestaNotFound, TException {
-        if(inUse.compareAndSet(false,true)) {
-        	if(!verificaId(aresta.getSecondVert())) {
-        		getVerticeServer(aresta.getSecondVert());
-        		inUse.set(false);
-            	clientHandler.removeArestaReplica(aresta);
-        	}
-        	else {
-        		List<Integer> arestaKey = new ArrayList<>();
-            	arestaKey.add(aresta.getFirstVert());
-            	arestaKey.add(aresta.getSecondVert());
-        		hashArestas.remove(arestaKey);
-        		System.out.println("\nremoveu replica aresta em sv "+serverId);
-        		inUse.set(false);
-        	}
-        }
+    public void editaArestaReplicaDescr(Aresta aresta, String descricao) throws ArestaNotFound,TException {
+    	if(!verificaId(aresta.getSecondVert())) {
+    		getVerticeServer(aresta.getSecondVert());
+    		clientHandler.editaArestaReplicaDescr(aresta,descricao);
+    	}
+    	else {
+    		buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), false).setDescricao(descricao);
+    	}
+    }
+
+    @Override
+    public void removeArestaControle(Aresta aresta, boolean controle) throws ArestaNotFound, TException {
+    	if(controle)
+    		removeAresta(aresta);
+    	else {
+    		if(inUse.compareAndSet(false,true)) {
+    			removeAresta(aresta);
+    			inUse.set(false);
+    		}
+    	}
     }
     
     @Override
-    public List<Aresta> listaArestasVerticeVerificacao(Vertice vertice, boolean passa) throws TException {
+    public void removeAresta(Aresta aresta) throws ArestaNotFound, TException {
+    	if(!verificaId(aresta.getFirstVert())) {
+    		getVerticeServer(aresta.getFirstVert());      		
+        	clientHandler.removeAresta(aresta);
+    	}
+    	else {
+    		removeArestaReplica(aresta);
+    		List<Integer> arestaKey = new ArrayList<>();
+        	arestaKey.add(aresta.getFirstVert());
+        	arestaKey.add(aresta.getSecondVert());
+    		hashArestas.remove(arestaKey);
+    		System.out.println("\nremoveu aresta em sv "+serverId);
+    	}
+    }
+
+    @Override
+    public void removeArestaReplica(Aresta aresta) throws ArestaNotFound, TException {
+    	if(!verificaId(aresta.getSecondVert())) {
+    		getVerticeServer(aresta.getSecondVert());
+        	clientHandler.removeArestaReplica(aresta);
+    	}
+    	else {
+    		List<Integer> arestaKey = new ArrayList<>();
+        	arestaKey.add(aresta.getFirstVert());
+        	arestaKey.add(aresta.getSecondVert());
+    		hashArestas.remove(arestaKey);
+    		System.out.println("\nremoveu replica aresta em sv "+serverId);
+    	}
+    }
+    
+    @Override
+    public List<Aresta> listaArestasVerticeControle(Vertice vertice, boolean passa) throws TException {
     	if(passa)
     		return listaArestasVertice(vertice);
     	else {
@@ -397,11 +482,9 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     @Override
     public synchronized List<Vertice> listaVerticesVizinhos(Vertice vertice) throws VerticeNotFound,TException {
     	List<Vertice> verticesVizinhos = null;
-        //if(inUse.compareAndSet(false,true)) {
         	verticesVizinhos = new ArrayList<>();
         	if(!verificaId(vertice.getNome())) {
 	            getVerticeServer(vertice);
-	            //inUse.set(false);
 	            return clientHandler.listaVerticesVizinhos(vertice);
 	        }
 	        else {
@@ -415,7 +498,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 	                }
 	        	}
 	        }
-        //}
         return verticesVizinhos;
     }
 
