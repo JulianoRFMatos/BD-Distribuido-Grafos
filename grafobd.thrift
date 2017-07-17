@@ -15,6 +15,19 @@ struct Aresta {
 	5: string descricao
 }
 
+struct Pessoa {
+	1: string nome_pessoa,
+	2: list<Filme> filmes_assistiu
+}
+
+struct Filme {
+	1: string nome_filme,
+	2: string genero,
+	3: list<string> cast,
+	4: list<Pessoa> pessoas_assistiram,
+	5: double nota
+}
+
 exception VerticeNotFound {
 	1: string errorMsgVertice;
 }
