@@ -49,5 +49,7 @@ service GrafoBD {
 	void removeArestaReplica(1: Aresta aresta) throws (1: ArestaNotFound err),
 	list<Aresta> listaArestasVerticeControle(1: Vertice vertice, 2: bool controle),
 	list<Aresta> listaArestasVertice(1: Vertice vertice),
-	list<Vertice> listaVerticesVizinhos(1: Vertice vertice) throws (1: VerticeNotFound err)
+	list<Vertice> listaVerticesVizinhos(1: Vertice vertice) throws (1: VerticeNotFound err),
+	list<Vertice> procuraMenorCaminho(1: Vertice comeco, 2: Vertice fim),
+	double distanciaPercorrida(1: Vertice fim)
 }

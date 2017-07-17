@@ -16,6 +16,34 @@ import org.apache.thrift.server.TThreadPoolServer;
 
 import java.util.*;
 
+
+import io.atomix.catalyst.buffer.PooledHeapAllocator;
+import io.atomix.catalyst.concurrent.Futures;
+import io.atomix.catalyst.concurrent.Listener;
+import io.atomix.catalyst.concurrent.SingleThreadContext;
+import io.atomix.catalyst.concurrent.ThreadContext;
+import io.atomix.catalyst.serializer.Serializer;
+import io.atomix.catalyst.transport.Address;
+import io.atomix.catalyst.transport.Server;
+import io.atomix.catalyst.transport.Transport;
+import io.atomix.catalyst.util.Assert;
+import io.atomix.catalyst.util.ConfigurationException;
+import io.atomix.copycat.Command;
+import io.atomix.copycat.Query;
+import io.atomix.copycat.protocol.ClientRequestTypeResolver;
+import io.atomix.copycat.protocol.ClientResponseTypeResolver;
+import io.atomix.copycat.server.cluster.Cluster;
+import io.atomix.copycat.server.cluster.Member;
+import io.atomix.copycat.server.state.ConnectionManager;
+import io.atomix.copycat.server.state.ServerContext;
+import io.atomix.copycat.server.storage.Log;
+import io.atomix.copycat.server.storage.Storage;
+import io.atomix.copycat.server.storage.StorageLevel;
+import io.atomix.copycat.server.storage.util.StorageSerialization;
+import io.atomix.copycat.server.util.ServerSerialization;
+import io.atomix.copycat.util.ProtocolSerialization;
+
+
 /**
  *
  * @author Juliano
@@ -51,6 +79,18 @@ public class GrafoServer {
             TServerTransport serverTransport = new TServerSocket(port+nro_servers);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport)
                                         .processor(processor));
+
+            for(int i = 0; i < 3; i++) {
+                AtomixReplica replica = AtomixReplica.builder(new Address("localhost", port+nro_servers))
+                  .withStorage(storage)
+                  .withTransport(transport)
+                  .build();
+
+                CompletableFuture<Atomix> future = replica.bootstrap();
+
+                future.join();
+            }
+
             int porta = port+nro_servers;
             //int port = nro_servers;
             System.out.println("Starting up server.. "+porta);

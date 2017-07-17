@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GrafoHandlerHS implements GrafoBD.Iface {
     private HashMap<Integer,Vertice> hashVertices;
     private HashMap<List<Integer>,Aresta> hashArestas;
-    //private MenorCaminho shortestPath;
+    private MenorCaminho shortestPath;
     private AtomicBoolean inUse = new AtomicBoolean(false);
     private GrafoBD.Client clientHandler;
     private TTransport temp_transport;
@@ -122,7 +122,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     	}
     	else {
     		try {
-    			Thread.sleep(1000);
+    			Thread.sleep(250);
 	    		if(inUse.compareAndSet(false,true)) {
 	    			Vertice v = buscaVerticeNome(nome);
 	    			inUse.set(false);
@@ -280,8 +280,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     	else {
     		try {
 	    		Aresta a = new Aresta();
-	    		Thread.sleep(1000);
-	    		//System.out.println("\nCRIOU ARESTA | inUse = "+inUse+"\n");
+	    		Thread.sleep(250);
 	    		if(inUse.compareAndSet(false,true)) {
 		    		a = buscaArestaNome(nomePrimeiroVert,nomeSegundoVert);
 		    		inUse.set(false);
@@ -498,16 +497,47 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         return verticesVizinhos;
     }
 
-    /*@Override
-    public List<Vertice> procuraMenorCaminho(Vertice comeco, Vertice fim) {
-    	/*List<Vertice> caminho = new ArrayList<>();
-        if(inUse.compareAndSet(false,true)) {
-        	shortestPath = new MenorCaminho(this);
-        	shortestPath.execute(comeco);
-            caminho = shortestPath.getPath(fim);
-            inUse.set(false);
-        }
-    	return caminho;
+    @Override
+    public List<Vertice> procuraMenorCaminho(Vertice comeco, Vertice fim) throws TException {
+    	if(inUse.compareAndSet(false,true)) {
+	    	List<Vertice> lv = new ArrayList<>();
+	    	List<Aresta> la = new ArrayList<>();
+
+	    	for(int i = 0; i < this.total_servidores; i++) {
+	    		if(!verificaId(i)) {
+	    			getVerticeServer(i);
+					
+					for(Vertice v : clientHandler.getHashVertices().values()) {
+		    			lv.add(v);
+		            }
+
+		    		for(Aresta a : clientHandler.getHashArestas().values()) {
+		    			if(!la.contains(a))
+		            		la.add(a);
+		            }
+	        	}
+	        	else {
+	        		for(Vertice v : hashVertices.values()) {
+		    			lv.add(v);
+		            }
+
+		    		for(Aresta a : hashArestas.values()) {
+		    			if(!la.contains(a))
+		            		la.add(a);
+		            }
+	        	}
+	    	}
+
+	    	List<Vertice> caminho = new ArrayList<>();
+	    	shortestPath = new MenorCaminho(lv,la);
+	    	shortestPath.execute(comeco);
+	    	System.out.println("\nCHAMOU EXECUTE\n");
+	        caminho = shortestPath.getPath(fim);
+	        inUse.set(false);
+	        return caminho;
+	    }
+
+    	return null;
     }
 
     @Override
@@ -518,10 +548,5 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
             inUse.set(false);
         }
     	return distancia;
-
-    	,
-		list<Vertice> procuraMenorCaminho(1: Vertice comeco, 2: Vertice fim),
-		double distanciaPercorrida(1: Vertice fim)
-
-    }*/
+    }
 }

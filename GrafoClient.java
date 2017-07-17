@@ -36,14 +36,12 @@ public class GrafoClient {
         	Scanner sc = new Scanner(System.in);
 
         	// RANDOMIZANDO PORTA
-        	/*
         	Random rand = new Random();
             TTransport transport = new TSocket("localhost", 9090+rand.nextInt(3));
             transport.open();
-            */
 
             // CLIENTE PASSA PORTA
-            TTransport transport = null;
+            /*TTransport transport = null;
             try {
             	System.out.print("Numero porta: ");
 	            //int porta = sc.nextInt();
@@ -52,7 +50,7 @@ public class GrafoClient {
 	            transport.open();
 	        } catch (InputMismatchException ime) {
 	        	System.out.println("Porta invalida!");
-	        }
+	        }*/
             
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
@@ -72,7 +70,8 @@ public class GrafoClient {
             client.insereVertice(new Vertice(2,2,"2",2));
             client.insereAresta(new Aresta(1,2,5,true,"aresta"));
             client.insereAresta(new Aresta(1,2,3,false,"repetiu"));
-            client.insereAresta(new Aresta(2,0,3,false,"2 para 0"));
+            //client.insereAresta(new Aresta(2,0,3,false,"2 para 0"));
+            client.insereAresta(new Aresta(2,0,3,true,"2 para 0"));
 
             do {
             	try {
@@ -385,7 +384,7 @@ public class GrafoClient {
 	                        }
 
 	                        break;
-	                    /*
+	                    
                         case 8:
                         	try {
 	                        	System.out.println("----------------------------------------"
@@ -395,8 +394,8 @@ public class GrafoClient {
 	                            System.out.println("\nIr para vertice...");
 	                            nomeVert2 = sc.nextInt();
 
-	                            Iterator<Vertice> it = client.procuraMenorCaminho(client.buscaVerticeNome(nomeVert),
-	                            	client.buscaVerticeNome(nomeVert2)).iterator();
+	                            Iterator<Vertice> it = client.procuraMenorCaminho(client.buscaVerticeNomeControle(nomeVert,false),
+	                            	client.buscaVerticeNomeControle(nomeVert2,false)).iterator();
 
 	                            System.out.println("\nCaminho a percorrer...");
 	                            while(it.hasNext()) {
@@ -412,7 +411,7 @@ public class GrafoClient {
 	                        	System.out.println("Nao existe caminho possivel entre os dois vertices");
 	                        }
 
-                        	break;*/
+                        	break;
 	                        
 	                    case 0:
 	                        System.out.println("Saindo....");
