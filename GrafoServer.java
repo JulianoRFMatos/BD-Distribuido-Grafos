@@ -14,35 +14,18 @@ import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.server.TThreadPoolServer;
 
-import java.util.*;
-
-
-import io.atomix.catalyst.buffer.PooledHeapAllocator;
-import io.atomix.catalyst.concurrent.Futures;
-import io.atomix.catalyst.concurrent.Listener;
-import io.atomix.catalyst.concurrent.SingleThreadContext;
-import io.atomix.catalyst.concurrent.ThreadContext;
-import io.atomix.catalyst.serializer.Serializer;
+/*
+import GrafoBD.Put;
+import GrafoBD.Get;
+*/
 import io.atomix.catalyst.transport.Address;
-import io.atomix.catalyst.transport.Server;
-import io.atomix.catalyst.transport.Transport;
-import io.atomix.catalyst.util.Assert;
-import io.atomix.catalyst.util.ConfigurationException;
-import io.atomix.copycat.Command;
-import io.atomix.copycat.Query;
-import io.atomix.copycat.protocol.ClientRequestTypeResolver;
-import io.atomix.copycat.protocol.ClientResponseTypeResolver;
-import io.atomix.copycat.server.cluster.Cluster;
-import io.atomix.copycat.server.cluster.Member;
-import io.atomix.copycat.server.state.ConnectionManager;
-import io.atomix.copycat.server.state.ServerContext;
-import io.atomix.copycat.server.storage.Log;
+import io.atomix.copycat.client.ConnectionStrategies;
+import io.atomix.copycat.client.CopycatClient;
+import io.atomix.copycat.server.CopycatServer;
 import io.atomix.copycat.server.storage.Storage;
 import io.atomix.copycat.server.storage.StorageLevel;
-import io.atomix.copycat.server.storage.util.StorageSerialization;
-import io.atomix.copycat.server.util.ServerSerialization;
-import io.atomix.copycat.util.ProtocolSerialization;
 
+import java.util.*;
 
 /**
  *
@@ -50,20 +33,24 @@ import io.atomix.copycat.util.ProtocolSerialization;
  */
 public class GrafoServer {
     static final int port = 9090;
+    static final int copycat_port = 5000;
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         System.out.print("Numero servidores: ");
         int nro_servers = 3;//sc.nextInt();
+
         try {
             for(int i = 0; i < nro_servers; i++){
                 int n = i;
+                int copycat_port1 = i;
+                int copycat_port2 = i+1;
                 GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,n);
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {
                     public void run() {
-                        connectClient(processor,n);
+                        connectClient(processor,n,copycat_port1,copycat_port2);
                     }
                 };
 
@@ -74,26 +61,34 @@ public class GrafoServer {
         }
     }
 
-    public static void connectClient(GrafoBD.Processor processor, int nro_servers) {
+    public static void connectClient(GrafoBD.Processor processor, int nro_servers, int copycat_port1, int copycat_port2) {
         try {
             TServerTransport serverTransport = new TServerSocket(port+nro_servers);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport)
                                         .processor(processor));
 
-            for(int i = 0; i < 3; i++) {
-                AtomixReplica replica = AtomixReplica.builder(new Address("localhost", port+nro_servers))
-                  .withStorage(storage)
-                  .withTransport(transport)
-                  .build();
+            CopycatServer copycatServer = CopycatServer.builder(new Address("localhost", copycat_port+nro_servers))
+                    .withStorage(
+                            Storage.builder()
+                                    .withStorageLevel(StorageLevel.MEMORY)
+                                    .build()
+                    )
+                    .withStateMachine(CopyCatStateMachine::new)
+                    .build();
 
-                CompletableFuture<Atomix> future = replica.bootstrap();
+            copycatServer.bootstrap().join();
 
-                future.join();
-            }
-
-            int porta = port+nro_servers;
-            //int port = nro_servers;
-            System.out.println("Starting up server.. "+porta);
+            CopycatServer copycatServer2 = CopycatServer.builder(new Address("localhost", copycat_port+nro_servers+1))
+                    .withStorage(
+                            Storage.builder()
+                                    .withStorageLevel(StorageLevel.MEMORY)
+                                    .build()
+                    )
+                    .withStateMachine(CopyCatStateMachine::new)
+                    .build();
+                    
+            int porta_atual = port+nro_servers;
+            System.out.println("Starting up server.. "+porta_atual);
             server.serve();
         } catch (Exception e) {
             e.printStackTrace();
