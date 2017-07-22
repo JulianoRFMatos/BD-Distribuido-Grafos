@@ -14,8 +14,19 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
+import GrafoBD.Put;
+import GrafoBD.Get;
+import io.atomix.catalyst.transport.Address;
+import io.atomix.catalyst.transport.netty.NettyTransport;
+import io.atomix.copycat.client.ConnectionStrategies;
+import io.atomix.copycat.client.CopycatClient;
+import io.atomix.copycat.server.CopycatServer;
+import io.atomix.copycat.server.storage.Storage;
+import io.atomix.copycat.server.storage.StorageLevel;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -32,14 +43,63 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     private int total_servidores;
     private int serverId;
     private final int porta = 9090;
+    private final int porta_cc = 5000;
     private final String msgErroVertice = "Erro ao buscar vertice informado!";
     private final String msgErroAresta = "Erro ao buscar aresta informada!";
 
-    public GrafoHandlerHS(int total_servidores, int serverId) {    	
+    private CopycatClient copycatClient;
+    private CopycatClient copycatClient2;
+
+    public GrafoHandlerHS(int total_servidores, int serverId, int copycat_port1, int copycat_port2) {    	
     	this.hashVertices = new HashMap<>();
     	this.hashArestas = new HashMap<>();
         this.total_servidores = total_servidores;
     	this.serverId = serverId;
+
+        /*CopycatClient copycatClient = CopycatClient.builder()
+          .withTransport(NettyTransport.builder()
+            .build())
+          .build();
+
+        Collection<Address> cluster = Arrays.asList(
+            new Address("localhost", porta+serverId)
+              //new Address("localhost", porta_cc+copycat_port1),
+              //new Address("localhost", porta_cc+copycat_port2)
+        );
+
+        CompletableFuture<CopycatClient> future = copycatClient.connect(cluster);
+        future.join();*/
+
+
+        //copycatClient.connect(new Address("localhost", porta_cc+copycat_port1));
+
+        /*copycatClient = CopycatClient.builder(new Address("localhost", porta_cc+copycat_port1))
+                .withConnectionStrategy(ConnectionStrategies.FIBONACCI_BACKOFF) porta_cc+copycat_port1
+                .build();*/
+        
+        /*copycatClient2 = CopycatClient.builder(new Address("localhost", porta_cc+copycat_port2))
+                //.withConnectionStrategy(ConnectionStrategies.FIBONACCI_BACKOFF)
+                .build();*/
+
+        
+        //copycatClient2.connect().join();
+    }
+
+    @Override
+    public void instanciaCCclient() {
+        CopycatClient copycatClient = CopycatClient.builder()
+          .withTransport(NettyTransport.builder()
+            .build())
+          .build();
+
+        Collection<Address> cluster = Arrays.asList(
+            new Address("localhost", porta+serverId)
+              //new Address("localhost", porta_cc+copycat_port1),
+              //new Address("localhost", porta_cc+copycat_port2)
+        );
+
+        CompletableFuture<CopycatClient> future = copycatClient.connect(cluster);
+        future.join();
     }
 
     public TProtocol setClientPort(int servidor) throws TException {

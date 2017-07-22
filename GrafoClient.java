@@ -15,6 +15,15 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
+/*import GrafoBD.Put;
+import GrafoBD.Get;*/
+import io.atomix.catalyst.transport.Address;
+import io.atomix.copycat.client.ConnectionStrategies;
+import io.atomix.copycat.client.CopycatClient;
+import io.atomix.copycat.server.CopycatServer;
+import io.atomix.copycat.server.storage.Storage;
+import io.atomix.copycat.server.storage.StorageLevel;
+
 /**
  *
  * @author Juliano
@@ -55,6 +64,8 @@ public class GrafoClient {
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
             
+            //client.instanciaCCclient();
+
             Vertice vertice;
             Aresta aresta;
             
