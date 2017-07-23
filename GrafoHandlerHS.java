@@ -260,7 +260,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         }
         else {
             if(this.hashVertices.containsKey(nome)){
-                System.out.println("VERTICE GET ->> "+cct.copycatClient.submit(new Get(this.hashVertices.get(nome).getNome())).join());
+                System.out.println("VERTICE GET ->> "+cct.copycatClient.submit(new GetVertice(this.hashVertices.get(nome).getNome())).join());
                 System.out.println("\nRETORNANDO VERTICE -> "+nome);
                 return this.hashVertices.get(nome);
             }
@@ -279,6 +279,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 	        }
 	        else {
 	        	buscaVerticeNome(vertice.getNome()).setCor(cor);
+                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setCor(cor))).join();
                 inUse.set(false);
 	        }
         }
@@ -289,11 +290,12 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         if(inUse.compareAndSet(false,true)) {
         	if(!verificaId(vertice.getNome())) {
         		getVerticeServer(vertice);
-            	clientHandler.editaVerticeDescr(vertice,descricao);	
+            	clientHandler.editaVerticeDescr(vertice,descricao);
             	inUse.set(false);
         	}
             else {
             	buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
+                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setDescricao(descricao))).join();
                 inUse.set(false);
             }
         }
@@ -309,6 +311,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
             else {
             	buscaVerticeNome(vertice.getNome()).setPeso(peso);
+                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setPeso(peso))).join();
             	inUse.set(false);
             }
         }
@@ -353,7 +356,12 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 
             	if(!hashArestas.containsKey(arestaKey)) {
             		hashArestas.put(arestaKey,aresta);
+                    cct.copycatClient.submit(new PutAresta(arestaKey, aresta)).join();
+                    //cct.copycatClient.submit(new Put(aresta.getFirstVert(), aresta)).join();
             		System.out.println("\nINSERIU ARESTA NO SERVER "+this.serverId+"\n");
+                    System.out.println("\naresta..\n"
+                        +"aresta 1 = "+aresta.getFirstVert()
+                        +"\naresta 2 = "+aresta.getSecondVert()+"\n");
             		inUse.set(false);
             		return true;
             	}
@@ -381,6 +389,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	arestaKey.add(aresta.getSecondVert());
         	if(!hashArestas.containsKey(arestaKey)) {
         		hashArestas.put(arestaKey,aresta);
+                cct.copycatClient.submit(new PutAresta(arestaKey, aresta)).join();
         		System.out.println("\nINSERIU REPLICA NO SERVER "+this.serverId+"\n");
         		return true;
         	}
@@ -421,6 +430,9 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	arestaKey.add(nomePrimeiroVert);
         	arestaKey.add(nomeSegundoVert);
     		if(hashArestas.containsKey(arestaKey)) {
+                System.out.println("\nARESTA GET -> "+cct.copycatClient.submit(
+                    new GetAresta(arestaKey)).join());
+
     			return hashArestas.get(arestaKey);
     		}
     		else

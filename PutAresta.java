@@ -3,24 +3,25 @@ package GrafoBD;
 import GrafoBD.*;
 
 import io.atomix.copycat.Command;
+import java.util.*;
 
 public class PutAresta implements Command<Object> {
 
     private static final long serialVersionUID = -7623701325395586197L;
 
-    private Integer key;
+    private List<Integer> key;
     private Aresta aresta;
 
-    public PutAresta(Integer key, Aresta aresta) {
+    public PutAresta(List<Integer> key, Aresta aresta) {
         this.key = key;
         this.aresta = aresta;
     }
 
-    public Integer getKey() {
+    public List<Integer> getKey() {
         return key;
     }
 
-    public void setKey(Integer key) {
+    public void setKey(List<Integer> key) {
         this.key = key;
     }
 
