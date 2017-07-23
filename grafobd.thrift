@@ -5,6 +5,8 @@ struct Vertice {
 	2: i32 cor,
 	3: string descricao,
 	4: double peso
+	5: Pessoa pessoa
+	6: Filme filme
 }
 
 struct Aresta {
