@@ -218,9 +218,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
                 if(!this.hashVertices.containsKey(vertice.getNome())){
                 	this.hashVertices.put(vertice.getNome(),vertice);
 
-                    cct.copycatClient.submit(new Put(vertice.getNome(), vertice)).join();
-                    System.out.println(cct.copycatClient.submit(new Get(vertice.getNome())).join());
-
+                    cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice)).join();
                     inUse.set(false);
                     System.out.println("\nADICIONOU VERTICE "+vertice.getNome()+"\n");
                     return true;
@@ -241,6 +239,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     			Thread.sleep(250);
 	    		if(inUse.compareAndSet(false,true)) {
 	    			Vertice v = buscaVerticeNome(nome);
+
 	    			inUse.set(false);
 	    			return v;
 	    		}
@@ -261,6 +260,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         }
         else {
             if(this.hashVertices.containsKey(nome)){
+                System.out.println("VERTICE GET ->> "+cct.copycatClient.submit(new Get(this.hashVertices.get(nome).getNome())).join());
                 System.out.println("\nRETORNANDO VERTICE -> "+nome);
                 return this.hashVertices.get(nome);
             }

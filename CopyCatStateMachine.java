@@ -8,9 +8,6 @@ import io.atomix.copycat.server.StateMachine;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by gustavomahlow on 11/07/17.
- */
 public class CopyCatStateMachine extends StateMachine {
 
     private Map<Integer, Vertice> stateMachineVert;
@@ -36,7 +33,7 @@ public class CopyCatStateMachine extends StateMachine {
         };
     }
 
-    public Vertice put(Commit<Put> commit) {
+    public Vertice put(Commit<PutVertice> commit) {
         try {
             return stateMachineVert.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
@@ -44,13 +41,13 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-    public Aresta put(Commit<Put> commit) {
+    /*public Aresta put(Commit<Put> commit) {
         try {
             return stateMachineArest.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
             commit.close();
         }
-    }
+    }*/
 
 
     public Vertice get(Commit<Get> commit) {

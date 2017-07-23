@@ -10,7 +10,6 @@ public class PutVertice implements Command<Object> {
 
     private Integer key;
     private Vertice vertice;
-    private Aresta aresta;
 
     public PutVertice(Integer key, Vertice vertice) {
         this.key = key;
