@@ -44,17 +44,73 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     private int serverId;
     private final int porta = 9090;
     private final int porta_cc = 5000;
+    private int porta_cc1;
+    private int porta_cc2;
     private final String msgErroVertice = "Erro ao buscar vertice informado!";
     private final String msgErroAresta = "Erro ao buscar aresta informada!";
 
     private CopycatClient copycatClient;
     private CopycatClient copycatClient2;
+    private CopyCat cct;
 
     public GrafoHandlerHS(int total_servidores, int serverId, int copycat_port1, int copycat_port2) {    	
     	this.hashVertices = new HashMap<>();
     	this.hashArestas = new HashMap<>();
         this.total_servidores = total_servidores;
     	this.serverId = serverId;
+        this.porta_cc1 = porta_cc+copycat_port1;
+        this.porta_cc2 = porta_cc+copycat_port2;
+
+        System.out.println("\n aaaaaaaaaaaaaaa \n");
+
+        cct = new CopyCat(porta_cc1, porta_cc2, porta+serverId);
+
+        /*CopycatServer copycatServer = CopycatServer.builder(
+                        new Address("localhost", 5000))//copycat_port+copycat_port1))
+                    .withTransport(NettyTransport.builder()
+                        .withThreads(4)
+                        .build())
+                    .withStorage(
+                            Storage.builder()
+                                    .withStorageLevel(StorageLevel.MEMORY)
+                                    .build()
+                    )
+                    .withStateMachine(CopyCatStateMachine::new)
+                    .build();
+
+            copycatServer.bootstrap(new Address("localhost", porta+serverId)).join();
+
+            System.out.println("\n qqqqqqqqqqqqqqqqqq \n");
+
+            CopycatServer copycatServer2 = CopycatServer.builder(
+                        new Address("localhost", 5001))//copycat_port+copycat_port2))
+                    .withTransport(NettyTransport.builder()
+                        .withThreads(4)
+                        .build())
+                    .withStorage(
+                            Storage.builder()
+                                    .withStorageLevel(StorageLevel.MEMORY)
+                                    .build()
+                    )
+                    .withStateMachine(CopyCatStateMachine::new)
+                    .build();
+
+            copycatServer2.join(new Address("localhost", 5000)).join();
+
+        CopycatClient copycatClient = CopycatClient.builder()
+              .withTransport(NettyTransport.builder()
+                .withThreads(4)
+                .build())
+              .build();
+
+            Collection<Address> cluster = Arrays.asList(
+                //new Address("localhost", porta+serverId)
+                  new Address("localhost", porta_cc+porta_cc1),
+                  new Address("localhost", porta_cc+porta_cc2)
+            );
+
+            System.out.println("\n bbbbbbbbbbbbbbbb \n");
+            copycatClient.connect(cluster).join();*/
 
         /*CopycatClient copycatClient = CopycatClient.builder()
           .withTransport(NettyTransport.builder()
@@ -86,20 +142,16 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     }
 
     @Override
-    public void instanciaCCclient() {
-        CopycatClient copycatClient = CopycatClient.builder()
-          .withTransport(NettyTransport.builder()
-            .build())
-          .build();
+    public int instanciaCCclient(int val) {
+        int p1;
+        int p2;
+        p1 = porta_cc+porta_cc1;
+        p2 = porta_cc+porta_cc2;
 
-        Collection<Address> cluster = Arrays.asList(
-            new Address("localhost", porta+serverId)
-              //new Address("localhost", porta_cc+copycat_port1),
-              //new Address("localhost", porta_cc+copycat_port2)
-        );
-
-        CompletableFuture<CopycatClient> future = copycatClient.connect(cluster);
-        future.join();
+        if(val==1)
+            return p1;
+        else
+            return p2;
     }
 
     public TProtocol setClientPort(int servidor) throws TException {
@@ -165,6 +217,10 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	else {
                 if(!this.hashVertices.containsKey(vertice.getNome())){
                 	this.hashVertices.put(vertice.getNome(),vertice);
+
+                    cct.copycatClient.submit(new Put(vertice.getNome(), vertice)).join();
+                    System.out.println(cct.copycatClient.submit(new Get(vertice.getNome())).join());
+
                     inUse.set(false);
                     System.out.println("\nADICIONOU VERTICE "+vertice.getNome()+"\n");
                     return true;

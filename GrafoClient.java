@@ -8,6 +8,8 @@ package GrafoBD;
 import GrafoBD.*;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 import org.apache.thrift.TException;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.transport.TTransport;
@@ -15,9 +17,10 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-/*import GrafoBD.Put;
-import GrafoBD.Get;*/
+import GrafoBD.Put;
+import GrafoBD.Get;
 import io.atomix.catalyst.transport.Address;
+import io.atomix.catalyst.transport.netty.NettyTransport;
 import io.atomix.copycat.client.ConnectionStrategies;
 import io.atomix.copycat.client.CopycatClient;
 import io.atomix.copycat.server.CopycatServer;
@@ -45,12 +48,16 @@ public class GrafoClient {
         	Scanner sc = new Scanner(System.in);
 
         	// RANDOMIZANDO PORTA
+        	/*
         	Random rand = new Random();
-            TTransport transport = new TSocket("localhost", 9090+rand.nextInt(3));
+        	int p = 9090+rand.nextInt(3);
+            TTransport transport = new TSocket("localhost", p);
             transport.open();
+			*/
 
             // CLIENTE PASSA PORTA
-            /*TTransport transport = null;
+            
+            TTransport transport = null;
             try {
             	System.out.print("Numero porta: ");
 	            //int porta = sc.nextInt();
@@ -59,12 +66,11 @@ public class GrafoClient {
 	            transport.open();
 	        } catch (InputMismatchException ime) {
 	        	System.out.println("Porta invalida!");
-	        }*/
+	        }
+	        
             
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
-            
-            //client.instanciaCCclient();
 
             Vertice vertice;
             Aresta aresta;

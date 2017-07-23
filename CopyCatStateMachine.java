@@ -13,32 +13,61 @@ import java.util.Map;
  */
 public class CopyCatStateMachine extends StateMachine {
 
-    private Map<Integer, String> stateMachine;
+    private Map<Integer, Vertice> stateMachineVert;
+    private Map<Integer, Aresta> stateMachineArest;
 
     public CopyCatStateMachine() {
-        this.stateMachine = new HashMap<Integer, String>(){
+        this.stateMachineVert = new HashMap<Integer, Vertice>(){
             private static final long serialVersionUID = 243496280539242747L;
 
             @Override
-            public String put(Integer key, String value) {
+            public Vertice put(Integer key, Vertice value) {
+                return super.put(key, value);
+            }
+        };
+
+        this.stateMachineArest = new HashMap<Integer, Aresta>(){
+            private static final long serialVersionUID = 243496280539242748L;
+
+            @Override
+            public Aresta put(Integer key, Aresta value) {
                 return super.put(key, value);
             }
         };
     }
 
-    public String put(Commit<Put> commit) {
+    public Vertice put(Commit<Put> commit) {
         try {
-            return stateMachine.put(commit.operation().getKey(), commit.operation().getValue());
+            return stateMachineVert.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
             commit.release();
         }
     }
 
-    public String get(Commit<Get> commit) {
+    public Aresta put(Commit<Put> commit) {
         try {
-            return stateMachine.get(commit.operation().getKey());
+            return stateMachineArest.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
-            commit.release();
+            commit.close();
         }
     }
+
+
+    public Vertice get(Commit<Get> commit) {
+        try {
+            return stateMachineVert.get(commit.operation().getKey());
+        } finally {
+            commit.release();
+            //commit.close();
+        }
+    }
+
+    /*public Aresta getA(Commit<Get> commit) {
+        try {
+            return stateMachineArest.get(commit.operation().getKey());
+        } finally {
+            commit.release();
+            //commit.close();
+        }
+    }*/
 }

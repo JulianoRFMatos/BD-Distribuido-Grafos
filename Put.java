@@ -1,20 +1,25 @@
 package GrafoBD;
 
+import GrafoBD.*;
+
 import io.atomix.copycat.Command;
 
-/**
- * Created by gustavomahlow on 11/07/17.
- */
-public class Put implements Command<String> {
+public class Put implements Command<Object> {
 
     private static final long serialVersionUID = -7623701325395586197L;
 
     private Integer key;
-    private String value;
+    private Vertice vertice;
+    private Aresta aresta;
 
-    public Put(Integer key, String value) {
+    public Put(Integer key, Vertice vertice) {
         this.key = key;
-        this.value = value;
+        this.vertice = vertice;
+    }
+
+    public Put(Integer key, Aresta aresta) {
+        this.key = key;
+        this.aresta = aresta;
     }
 
     public Integer getKey() {
@@ -25,11 +30,11 @@ public class Put implements Command<String> {
         this.key = key;
     }
 
-    public String getValue() {
-        return value;
+    public Vertice getValue() {
+        return vertice;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setValue(Vertice value) {
+        this.vertice = value;
     }
 }

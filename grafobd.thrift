@@ -24,7 +24,7 @@ exception ArestaNotFound {
 }
 
 service GrafoBD {
-	void instanciaCCclient(),
+	i32 instanciaCCclient(1:i32 val),
 	map<i32,Vertice> getHashVertices(),
 	map<list<i32>,Aresta> getHashArestas(),
 	void setInUseFalse(),
