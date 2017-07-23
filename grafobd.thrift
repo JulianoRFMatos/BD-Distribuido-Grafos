@@ -4,8 +4,8 @@ struct Vertice {
 	1: i32 nome,
 	2: i32 cor,
 	3: string descricao,
-	4: double peso
-	5: Pessoa pessoa
+	4: double peso,
+	5: Pessoa pessoa,
 	6: Filme filme
 }
 
@@ -19,14 +19,14 @@ struct Aresta {
 
 struct Pessoa {
 	1: string nome_pessoa,
-	2: list<Filme> filmes_assistiu
+	2: list<string> filmes_assistiu
 }
 
 struct Filme {
 	1: string nome_filme,
 	2: string genero,
 	3: list<string> cast,
-	4: list<Pessoa> pessoas_assistiram,
+	4: list<string> pessoas_assistiram,
 	5: double nota
 }
 
