@@ -19,24 +19,24 @@ public class CopyCatStateMachine extends StateMachine {
     public CopyCatStateMachine() {
         this.stateMachineVert = new HashMap<Integer, Vertice>() /*{
             private static final long serialVersionUID = 243496280539242747L;
-
             @Override
             public Vertice put(Integer key, Vertice value) {
                 return super.put(key, value);
             }
-        }*/;
+        }*/
+		;
 
         this.stateMachineArest = new HashMap<List<Integer>, Aresta>() /*{
             private static final long serialVersionUID = 243496280539242748L;
-
             @Override
             public Aresta put(List<Integer> key, Aresta value) {
                 return super.put(key, value);
             }
-        }*/;
+        }*/
+		;
     }
 
-    public Vertice putv(Commit<PutVertice> commit) {
+    public Vertice putV(Commit<PutVertice> commit) {
         try {
             return stateMachineVert.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
@@ -44,7 +44,7 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-    public Aresta puta(Commit<PutAresta> commit) {
+    public Aresta putA(Commit<PutAresta> commit) {
         try {
             return stateMachineArest.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
@@ -52,8 +52,7 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-
-    public Vertice getv(Commit<GetVertice> commit) {
+    public Vertice getV(Commit<GetVertice> commit) {
         try {
             return stateMachineVert.get(commit.operation().getKey());
         } finally {
@@ -61,11 +60,27 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-    public Aresta geta(Commit<GetAresta> commit) {
+    public Aresta getA(Commit<GetAresta> commit) {
         try {
             return stateMachineArest.get(commit.operation().getKey());
         } finally {
             commit.release();
         }
     }
+	
+	public Vertice delV(Commit<DelVertice> commit) {
+		try {
+            return stateMachineVert.remove(commit.operation().getKey());
+        } finally {
+            commit.release();
+        }
+	}
+	
+	public Aresta delA(Commit<DelAresta> commit) {
+		try {
+            return stateMachineArest.remove(commit.operation().getKey());
+        } finally {
+            commit.release();
+        }
+	}
 }
