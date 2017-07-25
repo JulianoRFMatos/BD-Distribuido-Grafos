@@ -330,6 +330,8 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
             	while(it.hasNext()) {
             		removeArestaControle(it.next(),true);
             	}
+		    
+		// FAZER CHAMADA cct.copycatClient(new DelVertice(vertice.getNome())).join();
                 hashVertices.remove(vertice.getNome());
                 inUse.set(false);
             }
@@ -450,6 +452,10 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
         	else {
         		Aresta a = buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setPeso(peso);
+			int[] arestaKey = {a.getFirstVert(), a.getSecondVert()};
+			// cct.copycatClient.submit(new PutAresta(Arrays.asList(arestaKey), a.setPeso(peso))).join();
+			//List<Integer> arestaKey = new ArrayList<>(a.getFirstVert(), a.getSecondVert());
+			// cct.copycatClient.submit(new PutAresta(arestaKey, a.setPeso(peso))).join();
         		editaArestaReplicaPeso(a,peso);
         		inUse.set(false);
         	}
@@ -466,6 +472,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     		List<Integer> arestaKey = new ArrayList<>();
         	arestaKey.add(aresta.getFirstVert());
         	arestaKey.add(aresta.getSecondVert());
+		cct.copycatClient.submit(new PutAresta(arestaKey, a.setPeso(peso))).join();
         	hashArestas.replace(arestaKey,aresta);
     	}
     }
@@ -480,6 +487,10 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
         	else {
         		Aresta a = buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setFlag(flag);
+			int[] arestaKey = {a.getFirstVert(), a.getSecondVert()};
+			// cct.copycatClient.submit(new PutAresta(Arrays.asList(arestaKey), a.setFlag(flag))).join();
+			// List<Integer> arestaKey = new ArrayList<>(a.getFirstVert(), a.getSecondVert());
+			// cct.copycatClient.submit(new PutAresta(arestaKey, a.setFlag(flag))).join();
         		editaArestaReplicaFlag(a,flag);
         		inUse.set(false);
         	}
@@ -496,6 +507,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     		List<Integer> arestaKey = new ArrayList<>();
         	arestaKey.add(aresta.getFirstVert());
         	arestaKey.add(aresta.getSecondVert());
+		// cct.copycatClient.submit(new PutAresta(arestaKey, a.setFlag(flag))).join();
         	hashArestas.replace(arestaKey,aresta);
     	}
     }
@@ -510,6 +522,10 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
         	else {
         		Aresta a = buscaArestaNomeControle(aresta.getFirstVert(), aresta.getSecondVert(), true).setDescricao(descricao);
+			int[] arestaKey = {a.getFirstVert(), a.getSecondVert()};
+			// cct.copycatClient.submit(new PutAresta(Arrays.asList(arestaKey), a.setDescricao(descricao))).join();
+			// List<Integer> arestaKey = new ArrayList<>(a.getFirstVert(), a.getSecondVert());
+			// cct.copycatClient.submit(new PutAresta(arestaKey, a.setDescricao(descricao))).join();
         		editaArestaReplicaDescr(a,descricao);
         		inUse.set(false);
         	}
@@ -526,6 +542,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     		List<Integer> arestaKey = new ArrayList<>();
         	arestaKey.add(aresta.getFirstVert());
         	arestaKey.add(aresta.getSecondVert());
+		// cct.copycatClient.submit(new PutAresta(arestaKey, a.setDescricao(descricao))).join();
         	hashArestas.replace(arestaKey,aresta);
     	}
     }
@@ -553,6 +570,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     		List<Integer> arestaKey = new ArrayList<>();
         	arestaKey.add(aresta.getFirstVert());
         	arestaKey.add(aresta.getSecondVert());
+		// FAZER CHAMADA cct.copycatClient.submit(new DelAresta(arestaKey)).join();
     		hashArestas.remove(arestaKey);
     		System.out.println("\nremoveu aresta em sv "+serverId);
     	}
@@ -568,6 +586,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     		List<Integer> arestaKey = new ArrayList<>();
         	arestaKey.add(aresta.getFirstVert());
         	arestaKey.add(aresta.getSecondVert());
+		// FAZER CHAMADA cct.copycatClient.submit(new DelAresta(arestaKey)).join();
     		hashArestas.remove(arestaKey);
     		System.out.println("\nremoveu replica aresta em sv "+serverId);
     	}
