@@ -9,13 +9,18 @@ import GrafoBD.*;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.TApplicationException;
+import org.apache.thrift.transport.TTransportException;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-import GrafoBD.Put;
-import GrafoBD.Get;
+import GrafoBD.PutVertice;
+import GrafoBD.GetVertice;
+import GrafoBD.DelVertice;
+import GrafoBD.PutAresta;
+import GrafoBD.GetAresta;
+import GrafoBD.DelAresta;
 import io.atomix.catalyst.transport.Address;
 import io.atomix.catalyst.transport.netty.NettyTransport;
 import io.atomix.copycat.client.ConnectionStrategies;
@@ -43,115 +48,14 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     private int total_servidores;
     private int serverId;
     private final int porta = 9090;
-    private final int porta_cc = 5000;
-    private int porta_cc1;
-    private int porta_cc2;
     private final String msgErroVertice = "Erro ao buscar vertice informado!";
     private final String msgErroAresta = "Erro ao buscar aresta informada!";
 
-    private CopycatClient copycatClient;
-    private CopycatClient copycatClient2;
-    private CopyCat cct;
-
-    public GrafoHandlerHS(int total_servidores, int serverId, int copycat_port1, int copycat_port2) {    	
+    public GrafoHandlerHS(int total_servidores, int serverId) {    	
     	this.hashVertices = new HashMap<>();
     	this.hashArestas = new HashMap<>();
         this.total_servidores = total_servidores;
     	this.serverId = serverId;
-        this.porta_cc1 = porta_cc+copycat_port1;
-        this.porta_cc2 = porta_cc+copycat_port2;
-
-        System.out.println("\n aaaaaaaaaaaaaaa \n");
-
-        cct = new CopyCat(porta_cc1, porta_cc2, porta+serverId);
-
-        /*CopycatServer copycatServer = CopycatServer.builder(
-                        new Address("localhost", 5000))//copycat_port+copycat_port1))
-                    .withTransport(NettyTransport.builder()
-                        .withThreads(4)
-                        .build())
-                    .withStorage(
-                            Storage.builder()
-                                    .withStorageLevel(StorageLevel.MEMORY)
-                                    .build()
-                    )
-                    .withStateMachine(CopyCatStateMachine::new)
-                    .build();
-
-            copycatServer.bootstrap(new Address("localhost", porta+serverId)).join();
-
-            System.out.println("\n qqqqqqqqqqqqqqqqqq \n");
-
-            CopycatServer copycatServer2 = CopycatServer.builder(
-                        new Address("localhost", 5001))//copycat_port+copycat_port2))
-                    .withTransport(NettyTransport.builder()
-                        .withThreads(4)
-                        .build())
-                    .withStorage(
-                            Storage.builder()
-                                    .withStorageLevel(StorageLevel.MEMORY)
-                                    .build()
-                    )
-                    .withStateMachine(CopyCatStateMachine::new)
-                    .build();
-
-            copycatServer2.join(new Address("localhost", 5000)).join();
-
-        CopycatClient copycatClient = CopycatClient.builder()
-              .withTransport(NettyTransport.builder()
-                .withThreads(4)
-                .build())
-              .build();
-
-            Collection<Address> cluster = Arrays.asList(
-                //new Address("localhost", porta+serverId)
-                  new Address("localhost", porta_cc+porta_cc1),
-                  new Address("localhost", porta_cc+porta_cc2)
-            );
-
-            System.out.println("\n bbbbbbbbbbbbbbbb \n");
-            copycatClient.connect(cluster).join();*/
-
-        /*CopycatClient copycatClient = CopycatClient.builder()
-          .withTransport(NettyTransport.builder()
-            .build())
-          .build();
-
-        Collection<Address> cluster = Arrays.asList(
-            new Address("localhost", porta+serverId)
-              //new Address("localhost", porta_cc+copycat_port1),
-              //new Address("localhost", porta_cc+copycat_port2)
-        );
-
-        CompletableFuture<CopycatClient> future = copycatClient.connect(cluster);
-        future.join();*/
-
-
-        //copycatClient.connect(new Address("localhost", porta_cc+copycat_port1));
-
-        /*copycatClient = CopycatClient.builder(new Address("localhost", porta_cc+copycat_port1))
-                .withConnectionStrategy(ConnectionStrategies.FIBONACCI_BACKOFF) porta_cc+copycat_port1
-                .build();*/
-        
-        /*copycatClient2 = CopycatClient.builder(new Address("localhost", porta_cc+copycat_port2))
-                //.withConnectionStrategy(ConnectionStrategies.FIBONACCI_BACKOFF)
-                .build();*/
-
-        
-        //copycatClient2.connect().join();
-    }
-
-    @Override
-    public int instanciaCCclient(int val) {
-        int p1;
-        int p2;
-        p1 = porta_cc+porta_cc1;
-        p2 = porta_cc+porta_cc2;
-
-        if(val==1)
-            return p1;
-        else
-            return p2;
     }
 
     public TProtocol setClientPort(int servidor) throws TException {
@@ -217,8 +121,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	else {
                 if(!this.hashVertices.containsKey(vertice.getNome())){
                 	this.hashVertices.put(vertice.getNome(),vertice);
-
-                    cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice)).join();
                     inUse.set(false);
                     System.out.println("\nADICIONOU VERTICE "+vertice.getNome()+"\n");
                     return true;
@@ -260,7 +162,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         }
         else {
             if(this.hashVertices.containsKey(nome)){
-                System.out.println("VERTICE GET ->> "+cct.copycatClient.submit(new GetVertice(this.hashVertices.get(nome).getNome())).join());
                 System.out.println("\nRETORNANDO VERTICE -> "+nome);
                 return this.hashVertices.get(nome);
             }
@@ -279,7 +180,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 	        }
 	        else {
 	        	buscaVerticeNome(vertice.getNome()).setCor(cor);
-                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setCor(cor))).join();
                 inUse.set(false);
 	        }
         }
@@ -295,7 +195,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
             else {
             	buscaVerticeNome(vertice.getNome()).setDescricao(descricao);
-                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setDescricao(descricao))).join();
                 inUse.set(false);
             }
         }
@@ -311,7 +210,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	}
             else {
             	buscaVerticeNome(vertice.getNome()).setPeso(peso);
-                cct.copycatClient.submit(new PutVertice(vertice.getNome(), vertice.setPeso(peso))).join();
             	inUse.set(false);
             }
         }
@@ -356,8 +254,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 
             	if(!hashArestas.containsKey(arestaKey)) {
             		hashArestas.put(arestaKey,aresta);
-                    cct.copycatClient.submit(new PutAresta(arestaKey, aresta)).join();
-                    //cct.copycatClient.submit(new Put(aresta.getFirstVert(), aresta)).join();
             		System.out.println("\nINSERIU ARESTA NO SERVER "+this.serverId+"\n");
                     System.out.println("\naresta..\n"
                         +"aresta 1 = "+aresta.getFirstVert()
@@ -389,7 +285,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	arestaKey.add(aresta.getSecondVert());
         	if(!hashArestas.containsKey(arestaKey)) {
         		hashArestas.put(arestaKey,aresta);
-                cct.copycatClient.submit(new PutAresta(arestaKey, aresta)).join();
         		System.out.println("\nINSERIU REPLICA NO SERVER "+this.serverId+"\n");
         		return true;
         	}
@@ -430,8 +325,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	arestaKey.add(nomePrimeiroVert);
         	arestaKey.add(nomeSegundoVert);
     		if(hashArestas.containsKey(arestaKey)) {
-                System.out.println("\nARESTA GET -> "+cct.copycatClient.submit(
-                    new GetAresta(arestaKey)).join());
 
     			return hashArestas.get(arestaKey);
     		}

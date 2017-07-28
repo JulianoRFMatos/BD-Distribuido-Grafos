@@ -37,19 +37,19 @@ public class GrafoServer {
         Scanner sc = new Scanner(System.in);
         System.out.print("Numero servidores: ");
         //int nro_servers = sc.nextInt();
-        int nro_servers = 3;
+        int nro_servers = 9;
 
         try {
             for(int i = 0; i < nro_servers; i++){
                 int n = i;
-                int copycat_port1 = n+i;
-                int copycat_port2 = n+i+1;
-                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,n,copycat_port1,copycat_port2);
+                //int replica_1 = n+i;
+                //int replica_2 = n+i+1;
+                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,n);
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {
                     public void run() {
-                        connectClient(processor,n,copycat_port1,copycat_port2);
+                        connectClient(processor,n);
                     }
                 };
 
@@ -60,7 +60,7 @@ public class GrafoServer {
         }
     }
 
-    public static void connectClient(GrafoBD.Processor processor, int nro_servers, int copycat_port1, int copycat_port2) {
+    public static void connectClient(GrafoBD.Processor processor, int nro_servers) {
         try {
             TServerTransport serverTransport = new TServerSocket(port+nro_servers);
             TServer server = new TThreadPoolServer(new TThreadPoolServer.Args(serverTransport)

@@ -17,8 +17,12 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-import GrafoBD.Put;
-import GrafoBD.Get;
+import GrafoBD.PutVertice;
+import GrafoBD.GetVertice;
+import GrafoBD.DelVertice;
+import GrafoBD.PutAresta;
+import GrafoBD.GetAresta;
+import GrafoBD.DelAresta;
 import io.atomix.catalyst.transport.Address;
 import io.atomix.catalyst.transport.netty.NettyTransport;
 import io.atomix.copycat.client.ConnectionStrategies;
@@ -72,6 +76,8 @@ public class GrafoClient {
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
 
+            CopyCat copycat = new CopyCat();
+
             Vertice vertice;
             Aresta aresta;
             
@@ -81,6 +87,7 @@ public class GrafoClient {
             boolean flag;
             boolean continua = true;
             
+            System.out.println("\n aaaaaaaaaaaaa \n");
             // PARA TESTES
             client.insereVertice(new Vertice(0,0,"0",0));
             client.insereVertice(new Vertice(1,1,"1",1));
@@ -89,6 +96,8 @@ public class GrafoClient {
             client.insereAresta(new Aresta(1,2,3,false,"repetiu"));
             //client.insereAresta(new Aresta(2,0,3,false,"2 para 0"));
             client.insereAresta(new Aresta(2,0,3,true,"2 para 0"));
+
+            System.out.println("\n bbbbbbbbbbbbbbbb \n");
 
             do {
             	try {
@@ -131,6 +140,8 @@ public class GrafoClient {
 
 	                                System.out.print("peso: ");
 	                                peso = sc.nextDouble();
+
+	                                copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso)));
 
 	                                if(!client.insereVertice(new Vertice(nomeVert, cor, descricao, peso)))
 	                                	System.out.println("Vertice ja existe");
@@ -443,7 +454,7 @@ public class GrafoClient {
 		            System.out.println("Valor digitado invalido!");
 		            sc.nextLine();
 		        } catch (TApplicationException tae) {
-		            System.out.println("Erro interno do servidor!");
+		            System.out.println("Valor nao encontrado!");
 		            //client.setInUseFalse();
 		            sc.nextLine();
 		        }
