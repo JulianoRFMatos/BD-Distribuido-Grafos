@@ -48,7 +48,7 @@ public class GrafoServer {
                     id.set(0);
                 
                 int n = i;
-                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,id.get());
+                GrafoHandlerHS handler = new GrafoHandlerHS(3,id.get());
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {
@@ -73,7 +73,7 @@ public class GrafoServer {
 
             int porta_atual = port+nro_servers;
             System.out.println("Starting up server.. "+porta_atual);
-            
+
             server.serve();
         } catch (Exception e) {
             e.printStackTrace();

@@ -27,90 +27,38 @@ public class CopyCat {
               new Address("localhost", 5002)
         );
 
-     public CopyCat() {
-
-        /*Collection<Address> cluster_1 = Arrays.asList(
+     Collection<Address> cl = Arrays.asList(
               new Address("localhost", 9090),
-              new Address("localhost", 9093),
-              new Address("localhost", 9096)
-        );
-
-        Collection<Address> cluster_2 = Arrays.asList(
               new Address("localhost", 9091),
-              new Address("localhost", 9094),
-              new Address("localhost", 9097)
-        );
-
-        Collection<Address> cluster_3 = Arrays.asList(
               new Address("localhost", 9092),
+              new Address("localhost", 9093),
+              new Address("localhost", 9094),
               new Address("localhost", 9095),
+              new Address("localhost", 9096),
+              new Address("localhost", 9097),
               new Address("localhost", 9098)
         );
 
-        copycatServer1 = CopycatServer.builder(
-                    new Address("localhost", porta_cc))
-                .withTransport(NettyTransport.builder()
-                    .withThreads(4)
-                    .build())
-                .withStorage(
-                        Storage.builder()
-                                .withStorageLevel(StorageLevel.MEMORY)
-                                .build()
-                )
-                .withStateMachine(CopyCatStateMachine::new)
-                .build();
+     Collection<Address> cluster_1 = Arrays.asList(
+              new Address("localhost", 9090),
+              new Address("localhost", 9091),
+              new Address("localhost", 9092)
+        );
 
-        copycatServer1.bootstrap().join();
-        //copycatServer1.join(cluster_1).join();
-        
-        System.out.println("copycat 1");
-            
-         copycatServer2 = CopycatServer.builder(
-                    new Address("localhost", porta_cc+1))
-                .withTransport(NettyTransport.builder()
-                    .withThreads(4)
-                    .build())
-                .withStorage(
-                        Storage.builder()
-                                .withStorageLevel(StorageLevel.MEMORY)
-                                .build()
-                )
-                .withStateMachine(CopyCatStateMachine::new)
-                .build();
+        Collection<Address> cluster_2 = Arrays.asList(
+              new Address("localhost", 9093),
+              new Address("localhost", 9094),
+              new Address("localhost", 9095)
+        );
 
-        //copycatServer2.bootstrap().join();
-        //copycatServer2.join(cluster_2).join();
-        copycatServer2.join(new Address("localhost", porta_cc)).join();
+        Collection<Address> cluster_3 = Arrays.asList(
+              new Address("localhost", 9096),
+              new Address("localhost", 9097),
+              new Address("localhost", 9098)
+        );
 
-        System.out.println("copycat 2");
+    public CopyCat() {
 
-        copycatServer3 = CopycatServer.builder(
-                    new Address("localhost", porta_cc+2))
-                .withTransport(NettyTransport.builder()
-                    .withThreads(4)
-                    .build())
-                .withStorage(
-                        Storage.builder()
-                                .withStorageLevel(StorageLevel.MEMORY)
-                                .build()
-                )
-                .withStateMachine(CopyCatStateMachine::new)
-                .build();
-
-        //copycatServer3.bootstrap().join();
-        //copycatServer3.join(cluster_3).join();
-        copycatServer3.join(new Address("localhost", porta_cc)).join();
-        System.out.println("copycat 3");
-
-        copycatClient = CopycatClient.builder()
-              .withTransport(NettyTransport.builder()
-                .withThreads(4)
-                .build())
-              .build();
-
-        System.out.println("copycat 4");
-        copycatClient.connect(cluster_total).join();
-        System.out.println("copycat 5");*/
     }
 
     public void criaServers() {
@@ -128,7 +76,7 @@ public class CopyCat {
                 .build();
 
         copycatServer1.bootstrap().join();
-        //copycatServer1.join(cluster_1).join();
+        copycatServer1.join(cl).join();
         
         System.out.println("copycat sv1 criado..");
             
@@ -144,10 +92,9 @@ public class CopyCat {
                 )
                 .withStateMachine(CopyCatStateMachine::new)
                 .build();
-
-        //copycatServer2.bootstrap().join();
-        //copycatServer2.join(cluster_2).join();
+      
         copycatServer2.join(new Address("localhost", 5000)).join();
+        //copycatServer2.join(cluster_2).join();
 
         System.out.println("copycat sv2 criado..");
 
@@ -163,10 +110,10 @@ public class CopyCat {
                 )
                 .withStateMachine(CopyCatStateMachine::new)
                 .build();
-
-        //copycatServer3.bootstrap().join();
-        //copycatServer3.join(cluster_3).join();
+     
         copycatServer3.join(new Address("localhost", 5000)).join();
+        //copycatServer3.join(cluster_3).join();
+
         System.out.println("copycat sv3 criado..");
     }
 
@@ -181,9 +128,5 @@ public class CopyCat {
         System.out.println("copycatClient criado!");
 
         return this;
-    }
-
-    public CopycatClient getCCclient() {
-      return this.copycatClient;
     }
 }

@@ -5,16 +5,19 @@ import GrafoBD.*;
 import java.util.*;
 import io.atomix.copycat.Command;
 
-public class DelAresta implements Command<Object> {
+public class DelAresta implements Command<Aresta> {
 
     private static final long serialVersionUID = -7623701325395586198L;
 
-    private List<Integer> key;
+    private List<Integer> key = new ArrayList<>();
     private Aresta value;
+    private int porta;
 
-    public DelAresta(List<Integer> key, Aresta value) {
-        this.key = key;
+    public DelAresta(int key_1, int key_2, Aresta aresta, int porta) {
+        this.key.add(key_1);
+        this.key.add(key_2);
         this.value = value;
+        this.porta = porta;
     }
 
     public List<Integer> getKey() {
@@ -31,5 +34,9 @@ public class DelAresta implements Command<Object> {
 
     public void setValue(Aresta value) {
         this.value = value;
+    }
+
+    public int getPorta() {
+        return porta;
     }
 }

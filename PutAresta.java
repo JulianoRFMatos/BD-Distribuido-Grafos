@@ -9,12 +9,15 @@ public class PutAresta implements Command<Object> {
 
     private static final long serialVersionUID = -7623701325395586197L;
 
-    private List<Integer> key;
+    private List<Integer> key = new ArrayList<>();
     private Aresta aresta;
+    private int porta;
 
-    public PutAresta(List<Integer> key, Aresta aresta) {
-        this.key = key;
+    public PutAresta(int key_1, int key_2, Aresta aresta, int porta) {
+        this.key.add(key_1);
+        this.key.add(key_2);
         this.aresta = aresta;
+        this.porta = porta;
     }
 
     public List<Integer> getKey() {
@@ -31,5 +34,9 @@ public class PutAresta implements Command<Object> {
 
     public void setValue(Aresta value) {
         this.aresta = value;
+    }
+
+    public int getPorta() {
+        return porta;
     }
 }
