@@ -9,6 +9,7 @@ import GrafoBD.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.TApplicationException;
@@ -52,20 +53,23 @@ public class GrafoClient {
         	Scanner sc = new Scanner(System.in);
 
         	// RANDOMIZANDO PORTA
-        	/*
-        	Random rand = new Random();
-        	int p = 9090+rand.nextInt(3);
-            TTransport transport = new TSocket("localhost", p);
+        	
+        	//Random rand = new Random();
+        	//int p = 9090+rand.nextInt(9);
+            /*TTransport transport = new TSocket("localhost", p);
             transport.open();
 			*/
 
+			//int randomNum = ThreadLocalRandom.current().nextInt(5000, 8000 + 1);
+        	//System.out.println("randomnum "+randomNum);
+
             // CLIENTE PASSA PORTA
-            
+            int porta = 0;
             TTransport transport = null;
             try {
             	System.out.print("Numero porta: ");
-	            //int porta = sc.nextInt();
-	            int porta = 9090;
+	            //porta = sc.nextInt();
+	            porta = 9090;
 	            transport = new TSocket("localhost", porta);
 	            transport.open();
 	        } catch (InputMismatchException ime) {
@@ -76,7 +80,7 @@ public class GrafoClient {
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
 
-            CopyCat copycat = new CopyCat();
+            CopyCat copycat = new CopyCat().criaClient();
 
             Vertice vertice;
             Aresta aresta;
@@ -89,13 +93,19 @@ public class GrafoClient {
             
             System.out.println("\n aaaaaaaaaaaaa \n");
             // PARA TESTES
-            client.insereVertice(new Vertice(0,0,"0",0));
+            /*client.insereVertice(new Vertice(0,0,"0",0));
             client.insereVertice(new Vertice(1,1,"1",1));
             client.insereVertice(new Vertice(2,2,"2",2));
-            client.insereAresta(new Aresta(1,2,5,true,"aresta"));
-            client.insereAresta(new Aresta(1,2,3,false,"repetiu"));
-            //client.insereAresta(new Aresta(2,0,3,false,"2 para 0"));
-            client.insereAresta(new Aresta(2,0,3,true,"2 para 0"));
+            client.insereVertice(new Vertice(3,3,"3",3));
+            client.insereAresta(new Aresta(1,0,10,false,"aresta"));
+            client.insereAresta(new Aresta(1,2,3,true,"repetiu"));
+            client.insereAresta(new Aresta(2,0,5,true,"2 para 0"));
+            client.insereAresta(new Aresta(2,3,1,false,"2 para 0"));
+            client.insereAresta(new Aresta(3,1,6,false,"2 para 0"));*/
+
+			copycat.copycatClient.submit(new PutVertice(0, new Vertice(0,0,"0",0), porta));
+			copycat.copycatClient.submit(new PutVertice(1, new Vertice(1,1,"1",1), porta));
+			copycat.copycatClient.submit(new PutVertice(2, new Vertice(2,2,"2",2), porta));
 
             System.out.println("\n bbbbbbbbbbbbbbbb \n");
 
@@ -141,9 +151,7 @@ public class GrafoClient {
 	                                System.out.print("peso: ");
 	                                peso = sc.nextDouble();
 
-	                                copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso)));
-
-	                                if(!client.insereVertice(new Vertice(nomeVert, cor, descricao, peso)))
+	                                if(!copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso), porta)))
 	                                	System.out.println("Vertice ja existe");
 	                            } 
 	                            else if(opcao == 2) {
@@ -190,7 +198,7 @@ public class GrafoClient {
 	                            	System.out.println("Nome do vertice... ");
 	                            	nomeVert = sc.nextInt();
 	                        	
-	                            	vertice = client.buscaVerticeNome(nomeVert);
+	                            	vertice = client.buscaVerticeNomeControle(nomeVert, false);
 	                            	if(vertice != null)
 	                        			System.out.println(verticeToString(vertice));
 

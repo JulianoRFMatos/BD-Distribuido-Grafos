@@ -1,0 +1,16 @@
+comandos thrift terminal
+
+thrift --gen java grafobd.thrift
+
+javac -cp jars/*:gen-java: -d . *.java
+
+java -cp jars/*:gen-java: GrafoBD.GrafoServer
+
+java -cp jars/*:gen-java: GrafoBD.GrafoClient
+
+
+//javac -cp jars/libthrift-0.10.0.jar:jars/slf4j-api-1.7.25.jar:gen-java: -d . *.java
+
+//java -cp jars/libthrift-0.10.0.jar:jars/slf4j-api-1.7.25.jar:gen-java: GrafoBD.GrafoServer
+
+//java -cp jars/libthrift-0.10.0.jar:jars/slf4j-api-1.7.25.jar:gen-java: GrafoBD.GrafoClient

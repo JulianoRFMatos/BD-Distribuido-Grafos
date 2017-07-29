@@ -25,36 +25,20 @@ public class CopyCatStateMachine extends StateMachine {
 
     private Map<Integer, Vertice> stateMachineVert;
     private Map<List<Integer>, Aresta> stateMachineArest;
-    private GrafoBD.Client client;
+    private TTransport transport = null;
+    private TProtocol protocol = null;
+    private GrafoBD.Client client = null;
 
     public CopyCatStateMachine() {
-        start();
-        this.stateMachineVert = new HashMap<Integer, Vertice>()
-        /*{
-            private static final long serialVersionUID = 243496280539242747L;
-
-            @Override
-            public Vertice put(Integer key, Vertice value) {
-                return super.put(key, value);
-            }
-        }*/
-        ;
-
-        this.stateMachineArest = new HashMap<List<Integer>, Aresta>() /*{
-            private static final long serialVersionUID = 243496280539242748L;
-
-            @Override
-            public Aresta put(List<Integer> key, Aresta value) {
-                return super.put(key, value);
-            }
-        }*/
-        ;
+        //start(tport);
+        this.stateMachineVert = new HashMap<Integer, Vertice>();
+        this.stateMachineArest = new HashMap<List<Integer>, Aresta>();
     }
 
-    public void start() {
+    public void start(int tport) {
         try{
             TTransport transport = null;
-            int porta = 9090;
+            int porta = tport;
             transport = new TSocket("localhost", porta);
             transport.open();
             TProtocol protocol = new TBinaryProtocol(transport);
@@ -64,10 +48,21 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-    public Vertice putVert(Commit<PutVertice> commit) throws TException{
+    public void setClientPort(int server) throws TException {
+        int porta;
+        System.out.println("ID Servidor -> "+(server));
+        this.transport = new TSocket("localhost", server);
+        this.transport.open();
+        this.protocol = new TBinaryProtocol(transport);
+        //return this.protocol;
+        this.client = new GrafoBD.Client(protocol);
+    }
+
+    public Boolean putVert(Commit<PutVertice> commit) throws TException {
         try {
-            client.insereVertice(commit.operation().getValue());
-            return stateMachineVert.put(commit.operation().getKey(), commit.operation().getValue());
+            setClientPort(commit.operation().getPorta());
+            return client.insereVertice(commit.operation().getValue());
+            //return stateMachineVert.put(commit.operation().getKey(), commit.operation().getValue());
         } finally {
             commit.release();
         }
@@ -82,9 +77,11 @@ public class CopyCatStateMachine extends StateMachine {
     }
 
 
-    public Vertice getVert(Commit<GetVertice> commit) {
+    public Vertice getVert(Commit<GetVertice> commit) throws TException {
         try {
-            return stateMachineVert.get(commit.operation().getKey());
+            setClientPort(commit.operation().getPorta());
+            return client.buscaVerticeNomeControle(commit.operation().getKey(), false);
+            //return stateMachineVert.get(commit.operation().getKey());
         } finally {
             commit.release();
         }

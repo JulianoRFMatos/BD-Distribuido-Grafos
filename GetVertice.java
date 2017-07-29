@@ -9,9 +9,11 @@ public class GetVertice implements Query<Object> {
     private static final long serialVersionUID = 7083193252544827065L;
 
     private Integer key;
+    private int porta;
 
-    public GetVertice(Integer key) {
+    public GetVertice(Integer key, int porta) {
         this.key = key;
+        this.porta = porta;
     }
 
     public Integer getKey() {
@@ -20,5 +22,9 @@ public class GetVertice implements Query<Object> {
     
     public void setKey(Integer key) {
         this.key = key;
+    }
+
+    public int getPorta() {
+        return porta;
     }
 }

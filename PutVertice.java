@@ -10,10 +10,12 @@ public class PutVertice implements Command<Object> {
 
     private Integer key;
     private Vertice vertice;
+    private int porta;
 
-    public PutVertice(Integer key, Vertice vertice) {
+    public PutVertice(Integer key, Vertice vertice, int porta) {
         this.key = key;
         this.vertice = vertice;
+        this.porta = porta;
     }
 
     public Integer getKey() {
@@ -30,5 +32,9 @@ public class PutVertice implements Command<Object> {
 
     public void setValue(Vertice value) {
         this.vertice = value;
+    }
+
+    public int getPorta() {
+        return porta;
     }
 }

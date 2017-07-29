@@ -24,6 +24,7 @@ import io.atomix.copycat.server.storage.StorageLevel;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -32,19 +33,22 @@ import java.util.concurrent.CompletableFuture;
 public class GrafoServer {
     static final int port = 9090;
     static final int copycat_port = 5000;
+    static AtomicInteger id = new AtomicInteger();
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         System.out.print("Numero servidores: ");
         //int nro_servers = sc.nextInt();
         int nro_servers = 9;
-
+        CopyCat cc = new CopyCat();
+        cc.criaServers();
         try {
             for(int i = 0; i < nro_servers; i++){
+                if(i%3==0)
+                    id.set(0);
+                
                 int n = i;
-                //int replica_1 = n+i;
-                //int replica_2 = n+i+1;
-                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,n);
+                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,id.get());
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {
@@ -54,6 +58,7 @@ public class GrafoServer {
                 };
 
                 new Thread(connectClient).start();
+                id.getAndIncrement();
             }
         } catch (Exception x) {
             x.printStackTrace();
@@ -68,6 +73,7 @@ public class GrafoServer {
 
             int porta_atual = port+nro_servers;
             System.out.println("Starting up server.. "+porta_atual);
+            
             server.serve();
         } catch (Exception e) {
             e.printStackTrace();

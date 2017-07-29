@@ -56,6 +56,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     	this.hashArestas = new HashMap<>();
         this.total_servidores = total_servidores;
     	this.serverId = serverId;
+        System.out.println("\nSERVER ID "+serverId);
     }
 
     public TProtocol setClientPort(int servidor) throws TException {
