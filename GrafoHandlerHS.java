@@ -61,7 +61,8 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 
     public TProtocol setClientPort(int servidor) throws TException {
     	System.out.println("Nro Servidor -> "+(porta+servidor)
-    		+"\ntotal_servidores -> "+this.total_servidores);
+    		+"\ntotal_servidores -> "+this.total_servidores
+            +"\nid_servidor -> "+this.serverId);
 
         this.temp_transport = new TSocket("localhost", porta+servidor);
         this.temp_transport.open();
@@ -79,12 +80,6 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         int vertice_server = vertice.getNome()%this.total_servidores;
         this.clientHandler = new GrafoBD.Client(setClientPort(vertice_server));
         System.out.println("VERTICE_SERVER -> "+vertice_server);
-    }
-
-    // INUTILIZADO
-    public void fechaTransport() {
-    	this.temp_transport.close();
-        System.out.println("FECHOU TRANSPORT\n");
     }
 
     public boolean verificaId(int serverId){
@@ -139,7 +134,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     	}
     	else {
     		try {
-    			Thread.sleep(250);
+    			//Thread.sleep(250);
 	    		if(inUse.compareAndSet(false,true)) {
 	    			Vertice v = buscaVerticeNome(nome);
 
@@ -157,6 +152,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 
     @Override
     public Vertice buscaVerticeNome(int nome) throws VerticeNotFound, TException { 
+        System.out.println("\nVERIFICA_ID -> "+verificaId(nome)+"\nnome -> "+nome+"\n");
 		if(!verificaId(nome)) {
             getVerticeServer(nome);
             return clientHandler.buscaVerticeNome(nome);

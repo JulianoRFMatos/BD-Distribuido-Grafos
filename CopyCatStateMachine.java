@@ -33,34 +33,65 @@ public class CopyCatStateMachine extends StateMachine {
     private Vertice vertice = null;
     private Aresta aresta = null;
     private AtomicInteger atom = new AtomicInteger();
+    private int server = -1;
 
     public CopyCatStateMachine() {
         this.stateMachineVert = new HashMap<Integer,Vertice>();
         this.stateMachineArest = new HashMap<List<Integer>,Aresta>();
     }
 
-    public void setClientPort(int id, int porta) throws TException {
-        int num;
-        int server = 9090+id%9;
-        Random rand = new Random();
-        num = porta+rand.nextInt(server);
-        System.out.println("ID Servidor -> "+(server));
-        this.transport = new TSocket("localhost", porta);
+    public void setClientPort() throws TException {
+        
+        System.out.println("\nID Servidor -> "+(server)+"\n");
+        this.transport = new TSocket("localhost", server);
         this.transport.open();
         this.protocol = new TBinaryProtocol(transport);
         this.client = new GrafoBD.Client(protocol);
     }
 
+    public void setClientPort(int id) throws TException {
+        int atual = 9090+(id%9);
+        System.out.println("\nID Servidor -> "+(atual)+"\n");
+        this.transport = new TSocket("localhost", atual);
+        this.transport.open();
+        this.protocol = new TBinaryProtocol(transport);
+        this.client = new GrafoBD.Client(protocol);
+    }
+
+    public void setServer(int id) {
+        int id_atual = id%3;
+        server = -1;
+        switch(id_atual) {
+            case 0:
+                server = 9090;
+                break;
+            case 1:
+                server = 9091;
+                break;
+            case 2:
+                server = 9092;
+                break;
+        }
+    }
+
     public int getAtom() {
-        if(atom.get() == 3)
+        if(atom.get() == 9) {
+            System.out.println("\nRESETOU ATOM\n");
             atom.set(0);
-        return atom.getAndIncrement();
+        }
+        return atom.addAndGet(3);
     }
 
     public boolean putVert(Commit<PutVertice> commit) throws TException, VerticeNotFound {
         try {
-            setClientPort(commit.operation().getKey(), commit.operation().getPorta());
-            return client.insereVertice(commit.operation().getValue());
+            setServer(commit.operation().getKey());
+            boolean bool = false;
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                bool = client.insereVertice(commit.operation().getValue());
+                server += 3;
+            }
+            return bool;
         } finally {
             commit.release();
         }
@@ -68,8 +99,14 @@ public class CopyCatStateMachine extends StateMachine {
 
     public boolean putAresta(Commit<PutAresta> commit) throws TException, VerticeNotFound {
         try {
-            setClientPort(commit.operation().getKey().get(0), commit.operation().getPorta());
-            return client.insereAresta(commit.operation().getValue());
+            setServer(commit.operation().getKey().get(0));
+            boolean bool = false;
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                bool = client.insereAresta(commit.operation().getValue());
+                server += 3;
+            }
+            return bool;
         } finally {
             commit.release();
         }
@@ -78,7 +115,7 @@ public class CopyCatStateMachine extends StateMachine {
 
     public Vertice getVert(Commit<GetVertice> commit) throws TException, VerticeNotFound {
         try {
-            setClientPort(commit.operation().getKey(), commit.operation().getPorta());
+            setClientPort(commit.operation().getKey());
             vertice = client.buscaVerticeNomeControle(commit.operation().getKey(), false);
             if(vertice != null)
                 return vertice;
@@ -91,7 +128,7 @@ public class CopyCatStateMachine extends StateMachine {
 
     public Aresta getAresta(Commit<GetAresta> commit) throws TException, ArestaNotFound {
         try {
-            setClientPort(commit.operation().getKey().get(0), commit.operation().getPorta());
+            setClientPort(commit.operation().getKey().get(0));
             aresta = client.buscaArestaNomeControle(commit.operation().getKey().get(0),
                                                   commit.operation().getKey().get(1),
                                                   false);
@@ -106,8 +143,12 @@ public class CopyCatStateMachine extends StateMachine {
 
     public void delVertice(Commit<DelVertice> commit) throws TException, ArestaNotFound {
         try {
-            setClientPort(commit.operation().getKey(), commit.operation().getPorta());
-            client.removeVertice(commit.operation().getValue());
+            setServer(commit.operation().getKey());
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                client.removeVertice(commit.operation().getValue());
+                server += 3;
+            }
         } finally {
             commit.release();
         }
@@ -115,8 +156,12 @@ public class CopyCatStateMachine extends StateMachine {
 
     public void delAresta(Commit<DelAresta> commit) throws TException, ArestaNotFound{
         try {
-            setClientPort(commit.operation().getKey().get(0), commit.operation().getPorta());
-            client.removeAresta(commit.operation().getValue());
+            setServer(commit.operation().getKey().get(0));
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                client.removeAresta(commit.operation().getValue());
+                server += 3;
+            }
         } finally {
             commit.release();
         }

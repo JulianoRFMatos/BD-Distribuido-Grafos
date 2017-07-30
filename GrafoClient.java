@@ -111,8 +111,6 @@ public class GrafoClient {
 			arestaKey.add(2);*/
 			copycat.copycatClient.submit(new PutAresta(1, 2, new Aresta(1, 2, 1, true, "descricao"), porta)).join();
 
-            System.out.println("\n bbbbbbbbbbbbbbbb \n");
-
             do {
             	try {
             		int opcaoMenu = -1;

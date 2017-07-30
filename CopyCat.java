@@ -27,36 +27,6 @@ public class CopyCat {
               new Address("localhost", 5002)
         );
 
-     Collection<Address> cl = Arrays.asList(
-              new Address("localhost", 9090),
-              new Address("localhost", 9091),
-              new Address("localhost", 9092),
-              new Address("localhost", 9093),
-              new Address("localhost", 9094),
-              new Address("localhost", 9095),
-              new Address("localhost", 9096),
-              new Address("localhost", 9097),
-              new Address("localhost", 9098)
-        );
-
-     Collection<Address> cluster_1 = Arrays.asList(
-              new Address("localhost", 9090),
-              new Address("localhost", 9091),
-              new Address("localhost", 9092)
-        );
-
-        Collection<Address> cluster_2 = Arrays.asList(
-              new Address("localhost", 9093),
-              new Address("localhost", 9094),
-              new Address("localhost", 9095)
-        );
-
-        Collection<Address> cluster_3 = Arrays.asList(
-              new Address("localhost", 9096),
-              new Address("localhost", 9097),
-              new Address("localhost", 9098)
-        );
-
     public CopyCat() {
 
     }
@@ -76,11 +46,10 @@ public class CopyCat {
                 .build();
 
         copycatServer1.bootstrap().join();
-        copycatServer1.join(cl).join();
         
         System.out.println("copycat sv1 criado..");
             
-         copycatServer2 = CopycatServer.builder(
+         /*copycatServer2 = CopycatServer.builder(
                     new Address("localhost", 5001))
                 .withTransport(NettyTransport.builder()
                     .withThreads(4)
@@ -114,7 +83,7 @@ public class CopyCat {
         copycatServer3.join(new Address("localhost", 5000)).join();
         //copycatServer3.join(cluster_3).join();
 
-        System.out.println("copycat sv3 criado..");
+        System.out.println("copycat sv3 criado..");*/
     }
 
     public CopyCat criaClient() {
@@ -125,6 +94,7 @@ public class CopyCat {
               .build();
 
         copycatClient.connect(cluster_total).join();
+        
         System.out.println("copycatClient criado!");
 
         return this;

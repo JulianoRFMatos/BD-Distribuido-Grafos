@@ -46,6 +46,8 @@ public class GrafoServer {
             for(int i = 0; i < nro_servers; i++){
                 if(i%3==0)
                     id.set(0);
+                /*if(i == 3 || i == 6)
+                    id.getAndIncrement();*/
                 
                 int n = i;
                 GrafoHandlerHS handler = new GrafoHandlerHS(3,id.get());
