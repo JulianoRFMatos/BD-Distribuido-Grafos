@@ -20,9 +20,11 @@ import org.apache.thrift.protocol.TBinaryProtocol;
 
 import GrafoBD.PutVertice;
 import GrafoBD.GetVertice;
+import GrafoBD.UpdVertice;
 import GrafoBD.DelVertice;
 import GrafoBD.PutAresta;
 import GrafoBD.GetAresta;
+import GrafoBD.UpdAresta;
 import GrafoBD.DelAresta;
 import io.atomix.catalyst.transport.Address;
 import io.atomix.catalyst.transport.netty.NettyTransport;
@@ -104,12 +106,10 @@ public class GrafoClient {
             client.insereAresta(new Aresta(2,3,1,false,"2 para 0"));
             client.insereAresta(new Aresta(3,1,6,false,"2 para 0"));*/
 
-			copycat.copycatClient.submit(new PutVertice(0, new Vertice(0,0,"0",0), porta)).join();
-			copycat.copycatClient.submit(new PutVertice(1, new Vertice(1,1,"1",1), porta)).join();
-			copycat.copycatClient.submit(new PutVertice(2, new Vertice(2,2,"2",2), porta)).join();
-			/*arestaKey.add(1);
-			arestaKey.add(2);*/
-			copycat.copycatClient.submit(new PutAresta(1, 2, new Aresta(1, 2, 1, true, "descricao"), porta)).join();
+			copycat.copycatClient.submit(new PutVertice(0, new Vertice(0,0,"0",0))).join();
+			copycat.copycatClient.submit(new PutVertice(1, new Vertice(1,1,"1",1))).join();
+			copycat.copycatClient.submit(new PutVertice(2, new Vertice(2,2,"2",2))).join();
+			copycat.copycatClient.submit(new PutAresta(1, 2, new Aresta(1, 2, 1, true, "descricao"))).join();
 
             do {
             	try {
@@ -153,7 +153,7 @@ public class GrafoClient {
 	                                System.out.print("peso: ");
 	                                peso = sc.nextDouble();
 
-	                                copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso), porta)).join();
+	                                copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso))).join();
 	                                //if(!client.insereVertice(new Vertice(nomeVert, cor, descricao, peso)))
 	                                //	System.out.println("Vertice ja existe");
 	                            } 
@@ -175,7 +175,7 @@ public class GrafoClient {
 	                                System.out.print("descricao: ");
 	                                descricao = sc.nextLine();
 	                                System.out.println("aaaaaaaaaa");
-	                                copycat.copycatClient.submit(new PutAresta(nomeVert, nomeVert2, new Aresta(nomeVert, nomeVert2, peso, flag, descricao), porta)).join();
+	                                copycat.copycatClient.submit(new PutAresta(nomeVert, nomeVert2, new Aresta(nomeVert, nomeVert2, peso, flag, descricao))).join();
 	                                //	System.out.println("Aresta ja existe/invalida");
 	                                //if(!client.insereAresta(new Aresta(nomeVert, nomeVert2, peso, flag, descricao)))
 	                                	
@@ -187,9 +187,7 @@ public class GrafoClient {
 	                        } catch (InputMismatchException ime) {
 	                            System.out.println("Valor digitado incorreto!");
 	                            sc.nextLine();
-	                        } /*catch (VerticeNotFound vnf) {
-	                        	System.out.println(vnf.errorMsgVertice);
-	                        }*/
+	                        }
 
 	                        break;
 	                        
@@ -204,8 +202,7 @@ public class GrafoClient {
 	                            	System.out.println("Nome do vertice... ");
 	                            	nomeVert = sc.nextInt();
 	                  
-	                        		vertice = copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join();
-	                            	//vertice = client.buscaVerticeNomeControle(nomeVert, false);
+	                        		vertice = copycat.copycatClient.submit(new GetVertice(nomeVert)).join();
 	                            	if(vertice != null)
 	                        			System.out.println(verticeToString(vertice));
 
@@ -216,8 +213,7 @@ public class GrafoClient {
 	                            	nomeVert = sc.nextInt();
 	                            	nomeVert2 = sc.nextInt();
 
-	                            	aresta = copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2,porta)).join();
-	                            	//aresta = client.buscaArestaNomeControle(nomeVert,nomeVert2, false);
+	                            	aresta = copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2)).join();
 	                        		System.out.println(arestaToString(aresta));
 
 	                            } else {
@@ -229,9 +225,7 @@ public class GrafoClient {
 	                            sc.nextLine();
 	                        } catch (Exception vnt) {
 	                        	System.out.println("Valor buscado nao foi encontrado!");
-	                        } /*catch (ArestaNotFound ant) {
-	                        	System.out.println(ant.errorMsgAresta);
-	                        }*/
+	                        }
 
 	                        break;
 	                        
@@ -245,8 +239,8 @@ public class GrafoClient {
 	                            if(opcao == 1) {
 	                                System.out.print("\nQual vertice... : ");
 	                                nomeVert = sc.nextInt();
-	                                //vertice = client.buscaVerticeNomeControle(nomeVert,false);
-	                                vertice = copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join();
+
+	                                vertice = copycat.copycatClient.submit(new GetVertice(nomeVert)).join();
 
 	                                System.out.println(verticeToString(vertice));
 
@@ -257,19 +251,19 @@ public class GrafoClient {
 	                                if(atributo.equalsIgnoreCase("cor")) {
 	                                	System.out.println("Nova cor (int)");
 	                                    cor = sc.nextInt();
-	                                    client.editaVerticeCor(vertice,cor);
+	                                    copycat.copycatClient.submit(new UpdVertice(vertice.getNome(),vertice,cor)).join();
 	                                }
 
 	                                if(atributo.equalsIgnoreCase("descricao")) {
 	                                	System.out.println("Nova descricao (string)");
 	                                    descricao = sc.nextLine();
-	                                    client.editaVerticeDescr(vertice,descricao);
+	                                    copycat.copycatClient.submit(new UpdVertice(vertice.getNome(),vertice,descricao)).join();
 	                                }
 
 	                                if(atributo.equalsIgnoreCase("peso")) {
 	                                	System.out.println("Novo peso (double)");
 	                                    peso = sc.nextDouble();
-	                                    client.editaVerticePeso(vertice,peso);
+	                                    copycat.copycatClient.submit(new UpdVertice(vertice.getNome(),vertice,peso)).join();
 	                                }
 	                            } else if(opcao == 2) {
 	                                System.out.print("\nQual aresta..."
@@ -277,8 +271,7 @@ public class GrafoClient {
 	                                nomeVert = sc.nextInt();
 	                                nomeVert2 = sc.nextInt();
 
-	                                //aresta = client.buscaArestaNomeControle(nomeVert, nomeVert2, false);
-	                                aresta = copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2,porta)).join();
+	                                aresta = copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2)).join();
 	                                System.out.println(arestaToString(aresta));
 	                                
 	                                System.out.println("\nAtributo a modificar...(peso,flag,descricao)");
@@ -288,19 +281,19 @@ public class GrafoClient {
 	                                if(atributo.equalsIgnoreCase("peso")) {
 	                                	System.out.println("Novo peso (double)");
 	                                    peso = sc.nextDouble();
-	                                    client.editaArestaPeso(aresta,peso);
+	                                    copycat.copycatClient.submit(new UpdAresta(nomeVert,nomeVert2,aresta,peso)).join();
 	                                }
 
 	                                if(atributo.equalsIgnoreCase("flag")) {
 	                                	System.out.println("Nova flag (bidirecional -> true | direcionado -> false)");
 	                                    flag = sc.nextBoolean();
-	                                    client.editaArestaFlag(aresta,flag);
+	                                    copycat.copycatClient.submit(new UpdAresta(nomeVert,nomeVert2,aresta,flag)).join();
 	                                }
 
 	                                if(atributo.equalsIgnoreCase("descricao")) {
 	                                	System.out.println("Nova descricao (string)");
 	                                    descricao = sc.nextLine();
-	                                    client.editaArestaDescr(aresta,descricao);
+	                                    copycat.copycatClient.submit(new UpdAresta(nomeVert,nomeVert2,aresta,descricao)).join();
 	                                }
 	                            } else {
 	                                System.out.println("Retornando...");
@@ -309,10 +302,8 @@ public class GrafoClient {
 	                        } catch (InputMismatchException ime) {
 	                            System.out.println("Valor digitado incorreto!");
 	                            sc.nextLine();
-	                        } catch (VerticeNotFound vnt) {
-	                        	System.out.println(vnt.errorMsgVertice);
-	                        } catch (ArestaNotFound ant) {
-	                        	System.out.println(ant.errorMsgAresta);
+	                        }  catch (Exception vnt) {
+	                        	System.out.println("Valor buscado nao foi encontrado!");
 	                        }
 	                        
 	                        break;
@@ -329,8 +320,8 @@ public class GrafoClient {
 	                                System.out.println("Qual vertice...");
 	                                nomeVert = sc.nextInt();
 
-	                                copycat.copycatClient.submit(new DelVertice(nomeVert, vertice, porta)).join();
-	                                //client.removeVertice(client.buscaVerticeNomeControle(nomeVert,false));
+	                                vertice = copycat.copycatClient.submit(new GetVertice(nomeVert)).join();
+	                                copycat.copycatClient.submit(new DelVertice(vertice.getNome(), vertice)).join();
 	                            }
 	                            if(opcao == 2) {
 	                                System.out.print("\nQual aresta..."
@@ -338,8 +329,8 @@ public class GrafoClient {
 	                                nomeVert = sc.nextInt();
 	                                nomeVert2 = sc.nextInt();
 
-	                                copycat.copycatClient.submit(new DelAresta(nomeVert, nomeVert2, aresta, porta)).join();
-	                                //client.removeArestaControle(client.buscaArestaNomeControle(nomeVert,nomeVert2,false),false);
+	                                aresta = copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2)).join();
+	                                copycat.copycatClient.submit(new DelAresta(nomeVert,nomeVert2,aresta)).join();
 	                            }
 	                            else {
 	                                System.out.println("Retornando...");
@@ -349,7 +340,7 @@ public class GrafoClient {
 	                            System.out.println("Valor digitado incorreto!");
 	                            sc.nextLine();
 	                        }  catch (Exception vnt) {
-	                        	System.out.println("Valor buscado nao foi encontrado!");
+	                        	System.out.println(vnt.getMessage());
 	                        }
 
 	                        break;
@@ -364,14 +355,11 @@ public class GrafoClient {
 			                    nomeVert = sc.nextInt();
 			                    nomeVert2 = sc.nextInt();
 
-			                    if(copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2,porta)) != null) {
+			                    if(copycat.copycatClient.submit(new GetAresta(nomeVert,nomeVert2)).join() != null) {
 			                    	System.out.println("\nAresta encontrada! Vertices...\n");
 
-			                    	//vertice = copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join();
-									System.out.println("\nVertice 1\n" + verticeToString(copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join()));
-
-									//vertice = copycat.copycatClient.submit(new GetVertice(nomeVert2,porta)).join();
-									System.out.println("\nVertice 2\n" + verticeToString(copycat.copycatClient.submit(new GetVertice(nomeVert2,porta)).join()));
+									System.out.println("\nVertice 1\n" + verticeToString(copycat.copycatClient.submit(new GetVertice(nomeVert)).join()));
+									System.out.println("\nVertice 2\n" + verticeToString(copycat.copycatClient.submit(new GetVertice(nomeVert2)).join()));
 								}
 								else
 									System.out.println("\nlista vertices aresta falhou\n");
@@ -391,9 +379,13 @@ public class GrafoClient {
 	                                +"\nQual vertice...");
 	                            nomeVert = sc.nextInt();
 
-	                            //vertice = copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join();
-	                            Iterator<Aresta> it = client.listaArestasVerticeControle(copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join()
+	                            Iterator<Aresta> it = client.listaArestasVerticeControle(copycat.copycatClient.submit(new GetVertice(nomeVert)).join()
                             															,false).iterator();
+
+	                            //vertice = copycat.copycatClient.submit(new GetVertice(nomeVert)).join();
+	                            //List<Aresta> l = copycat.copycatClient.submit(new GetListaArestasVertice(vertice)).join();
+	                            //Iterator<Aresta> it = copycat.copycatClient.submit(new GetListaArestasVertice(vertice)).join();
+	                            //Iterator<Aresta> it = l.iterator();
 
 	                            System.out.println("\nArestas do vertice "+nomeVert);
 	                            while(it.hasNext()) {
@@ -402,10 +394,8 @@ public class GrafoClient {
 	                        } catch (InputMismatchException ime) {
 	                            System.out.println("Valor digitado incorreto!");
 	                            sc.nextLine();
-	                        } catch (VerticeNotFound vnt) {
-	                        	System.out.println(vnt.errorMsgVertice);
-	                        } catch (ArestaNotFound ant) {
-	                        	System.out.println(ant.errorMsgAresta);
+	                        } catch (Exception vnt) {
+	                        	System.out.println("Valor buscado nao foi encontrado.");
 	                        }
 
 	                        break;
@@ -417,7 +407,7 @@ public class GrafoClient {
 	                            	+"\nListar vertices vizinhos..\nQual vertice...");
 	                            nomeVert = sc.nextInt();
 
-	                            vertice = copycat.copycatClient.submit(new GetVertice(nomeVert,porta)).join();
+	                            vertice = copycat.copycatClient.submit(new GetVertice(nomeVert)).join();
 	                            //vertice = client.buscaVerticeNome(nomeVert);
 								Iterator<Vertice> it = client.listaVerticesVizinhos(vertice).iterator();
 

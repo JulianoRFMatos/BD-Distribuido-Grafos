@@ -4,16 +4,18 @@ import GrafoBD.*;
 
 import io.atomix.copycat.Command;
 
-public class PutVertice implements Command<Object> {
+public class UpdVertice implements Command<Object> {
 
     private static final long serialVersionUID = -7623701325395586197L;
 
     private Integer key;
     private Vertice vertice;
+    private Object atributo;
 
-    public PutVertice(Integer key, Vertice vertice) {
+    public UpdVertice(Integer key, Vertice vertice, Object atributo) {
         this.key = key;
         this.vertice = vertice;
+        this.atributo = atributo;
     }
 
     public Integer getKey() {
@@ -30,5 +32,9 @@ public class PutVertice implements Command<Object> {
 
     public void setValue(Vertice value) {
         this.vertice = value;
+    }
+
+    public Object getAtributo() {
+        return atributo;
     }
 }

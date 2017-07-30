@@ -36,8 +36,8 @@ public class CopyCatStateMachine extends StateMachine {
     private int server = -1;
 
     public CopyCatStateMachine() {
-        this.stateMachineVert = new HashMap<Integer,Vertice>();
-        this.stateMachineArest = new HashMap<List<Integer>,Aresta>();
+        //this.stateMachineVert = new HashMap<Integer,Vertice>();
+        //this.stateMachineArest = new HashMap<List<Integer>,Aresta>();
     }
 
     public void setClientPort() throws TException {
@@ -112,7 +112,6 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-
     public Vertice getVert(Commit<GetVertice> commit) throws TException, VerticeNotFound {
         try {
             setClientPort(commit.operation().getKey());
@@ -136,6 +135,42 @@ public class CopyCatStateMachine extends StateMachine {
                 return aresta;
             else
                 throw new ArestaNotFound("Aresta nao encontrada!");
+        } finally {
+            commit.release();
+        }
+    }
+
+    public void updVert(Commit<UpdVertice> commit) throws TException, VerticeNotFound {
+        try {
+            setServer(commit.operation().getKey());
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                if(commit.operation().getAtributo() instanceof Integer)
+                	client.editaVerticeCor(commit.operation().getValue(), (int)commit.operation().getAtributo());
+                if(commit.operation().getAtributo() instanceof String)
+                	client.editaVerticeDescr(commit.operation().getValue(), (String)commit.operation().getAtributo());
+                if(commit.operation().getAtributo() instanceof Double)
+                	client.editaVerticePeso(commit.operation().getValue(), (double)commit.operation().getAtributo());
+                server += 3;
+            }
+        } finally {
+            commit.release();
+        }
+    }
+
+	public void updAresta(Commit<UpdAresta> commit) throws TException, VerticeNotFound {
+        try {
+            setServer(commit.operation().getKey().get(0));
+            for(int i = 0; i < 3; i++){
+                setClientPort();
+                if(commit.operation().getAtributo() instanceof Boolean)
+                	client.editaArestaFlag(commit.operation().getValue(), (Boolean)commit.operation().getAtributo());
+                if(commit.operation().getAtributo() instanceof String)
+                	client.editaArestaDescr(commit.operation().getValue(), (String)commit.operation().getAtributo());
+                if(commit.operation().getAtributo() instanceof Double)
+                	client.editaArestaPeso(commit.operation().getValue(), (double)commit.operation().getAtributo());
+                server += 3;
+            }
         } finally {
             commit.release();
         }
@@ -166,4 +201,15 @@ public class CopyCatStateMachine extends StateMachine {
             commit.release();
         }
     }
+
+    /*public List<Aresta> getListaArestasVertice(Commit<GetListaArestasVertice> commit) throws TException, ArestaNotFound {
+        try {
+            setClientPort(commit.operation().getVertice().getNome());
+            //Iterator<Aresta> it = 
+            return client.listaArestasVerticeControle(commit.operation().getVertice(),false);
+            //return it;
+        } finally {
+            commit.release();
+        }
+    }*/
 }

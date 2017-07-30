@@ -4,18 +4,16 @@ import GrafoBD.*;
 
 import io.atomix.copycat.Command;
 
-public class DelVertice implements Command<Vertice> {
+public class DelVertice implements Command<Object> {
 
     private static final long serialVersionUID = -7623701325395586197L;
 
     private Integer key;
     private Vertice vertice;
-    private int porta;
 
-    public DelVertice(Integer key, Vertice vertice, int porta) {
+    public DelVertice(Integer key, Vertice vertice) {
         this.key = key;
         this.vertice = vertice;
-        this.porta = porta;
     }
 
     public Integer getKey() {
@@ -32,9 +30,5 @@ public class DelVertice implements Command<Vertice> {
 
     public void setValue(Vertice value) {
         this.vertice = value;
-    }
-
-    public int getPorta() {
-        return porta;
     }
 }
