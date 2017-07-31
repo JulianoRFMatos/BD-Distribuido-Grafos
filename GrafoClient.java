@@ -25,7 +25,6 @@ import io.atomix.copycat.client.CopycatClient;
 import io.atomix.copycat.server.CopycatServer;
 import io.atomix.copycat.server.storage.Storage;
 import io.atomix.copycat.server.storage.StorageLevel;
-import io.atomix.copycat.error.ApplicationException;
 
 /**
  *
@@ -50,8 +49,8 @@ public class GrafoClient {
         	// RANDOMIZANDO PORTA
         	
         	Random rand = new Random();
-        	int p = 9090+rand.nextInt(9);
-            TTransport transport = new TSocket("localhost", p);
+        	int porta = 9090+rand.nextInt(9);
+            TTransport transport = new TSocket("localhost", porta);
             transport.open();
 
             // CLIENTE PASSA PORTA
@@ -71,6 +70,7 @@ public class GrafoClient {
             
             TProtocol protocol = new TBinaryProtocol(transport);
             GrafoBD.Client client = new GrafoBD.Client(protocol);
+            System.out.println("\nClient conectado em.. " + porta);
 
             CopyCat copycat = new CopyCat().criaClient();
 
@@ -138,8 +138,6 @@ public class GrafoClient {
 	                                peso = sc.nextDouble();
 
 	                                copycat.copycatClient.submit(new PutVertice(nomeVert, new Vertice(nomeVert, cor, descricao, peso))).join();
-	                                //if(!client.insereVertice(new Vertice(nomeVert, cor, descricao, peso)))
-	                                //	System.out.println("Vertice ja existe");
 	                            } 
 	                            else if(opcao == 2) {
 	                                System.out.print("Nova Aresta"
@@ -159,9 +157,7 @@ public class GrafoClient {
 	                                System.out.print("descricao: ");
 	                                descricao = sc.nextLine();
 	                                System.out.println("aaaaaaaaaa");
-	                                copycat.copycatClient.submit(new PutAresta(nomeVert, nomeVert2, new Aresta(nomeVert, nomeVert2, peso, flag, descricao))).join();	                                
-	                                //if(!client.insereAresta(new Aresta(nomeVert, nomeVert2, peso, flag, descricao)))
-	                                //	System.out.println("Aresta ja existe/invalida");
+	                                copycat.copycatClient.submit(new PutAresta(nomeVert, nomeVert2, new Aresta(nomeVert, nomeVert2, peso, flag, descricao))).join();
 	                            } else {
 	                                System.out.println("Retornando...");
 	                                break;
@@ -323,7 +319,8 @@ public class GrafoClient {
 	                            System.out.println("Valor digitado incorreto!");
 	                            sc.nextLine();
 	                        }  catch (Exception vnt) {
-	                        	System.out.println(vnt.getMessage());
+	                        	System.out.println(vnt.getMessage()+"asdfasdf");
+	                        	client.setInUseFalse();
 	                        }
 
 	                        break;
@@ -444,10 +441,6 @@ public class GrafoClient {
 		            sc.nextLine();
 		        } catch (TApplicationException tae) {
 		            System.out.println("Valor nao encontrado!");
-		            sc.nextLine();
-		        } catch (ApplicationException ae) {
-		            System.out.println(ae.getMessage()+" asdfasdf");
-		            client.setInUseFalse();
 		            sc.nextLine();
 		        }
 

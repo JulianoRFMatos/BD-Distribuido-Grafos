@@ -447,25 +447,9 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	clientHandler.removeAresta(aresta);
     	}
     	else {
-            System.out.println("\nqqqqqqqqqqqq\n");
-            /*for(Iterator<Map.Entry<List<Integer>,Aresta>> it = hashArestas.entrySet().iterator(); it.hasNext();) {
-                 Map.Entry<List<Integer>,Aresta> entry = it.next();
-                 System.out.println("\n ARESTA ->> "+entry.getValue());
-                 if (entry.getValue().getFirstVert() == aresta.getFirstVert()
-                        && entry.getValue().getSecondVert() == aresta.getSecondVert()) {
-                        System.out.println("\nREMOVEU ARESTA EM ->> "+serverId);
-                      it.remove();
-                 }
-             }*/
-
-    		//removeArestaReplica(aresta);
-    		List<Integer> arestaKey = new ArrayList<>();
-            System.out.println("\n criou arraylist\n");
-        	arestaKey.add(aresta.getFirstVert());
-            System.out.println("\n add 1 \n");
-        	arestaKey.add(aresta.getSecondVert());
-            System.out.println("\n add 2\n");
-    		hashArestas.remove(arestaKey);
+    		removeArestaReplica(aresta);
+            int[] arr = {aresta.getFirstVert(), aresta.getSecondVert()};
+    		hashArestas.remove(Arrays.asList(arr));
     		System.out.println("\nremoveu aresta em sv "+serverId);
     	}
     }
