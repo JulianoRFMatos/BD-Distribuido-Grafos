@@ -10,12 +10,9 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TBinaryProtocol;
 
-import GrafoBD.PutVertice;
-import GrafoBD.PutAresta;
-import GrafoBD.GetVertice;
-import GrafoBD.GetAresta;
 import io.atomix.copycat.server.Commit;
 import io.atomix.copycat.server.StateMachine;
+import io.atomix.copycat.error.ApplicationException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +33,7 @@ public class CopyCatStateMachine extends StateMachine {
     private int server = -1;
 
     public CopyCatStateMachine() {
-        //this.stateMachineVert = new HashMap<Integer,Vertice>();
-        //this.stateMachineArest = new HashMap<List<Integer>,Aresta>();
+
     }
 
     public void setClientPort() throws TException {
@@ -49,7 +45,17 @@ public class CopyCatStateMachine extends StateMachine {
         this.client = new GrafoBD.Client(protocol);
     }
 
+    public void setClientPort(int porta, boolean b) throws TException {
+        
+        System.out.println("\nID Servidor -> "+(porta)+"\n");
+        this.transport = new TSocket("localhost", porta);
+        this.transport.open();
+        this.protocol = new TBinaryProtocol(transport);
+        this.client = new GrafoBD.Client(protocol);
+    }
+
     public void setClientPort(int id) throws TException {
+
         int atual = 9090+(id%9);
         System.out.println("\nID Servidor -> "+(atual)+"\n");
         this.transport = new TSocket("localhost", atual);
@@ -79,7 +85,7 @@ public class CopyCatStateMachine extends StateMachine {
             System.out.println("\nRESETOU ATOM\n");
             atom.set(0);
         }
-        return atom.addAndGet(3);
+        return atom.getAndAdd(3);
     }
 
     public boolean putVert(Commit<PutVertice> commit) throws TException, VerticeNotFound {
@@ -100,11 +106,18 @@ public class CopyCatStateMachine extends StateMachine {
     public boolean putAresta(Commit<PutAresta> commit) throws TException, VerticeNotFound {
         try {
             setServer(commit.operation().getKey().get(0));
+            int serverV1 = server;
             boolean bool = false;
             for(int i = 0; i < 3; i++){
-                setClientPort();
+                setClientPort(serverV1, true);
                 bool = client.insereAresta(commit.operation().getValue());
-                server += 3;
+
+                setServer(commit.operation().getKey().get(1));
+                server += getAtom();
+                setClientPort();
+                client.insereArestaReplica(commit.operation().getValue());
+
+                serverV1 += 3;
             }
             return bool;
         } finally {
@@ -189,27 +202,23 @@ public class CopyCatStateMachine extends StateMachine {
         }
     }
 
-    public void delAresta(Commit<DelAresta> commit) throws TException, ArestaNotFound{
+    public void delAresta(Commit<DelAresta> commit) throws TException, ArestaNotFound, ApplicationException {
         try {
             setServer(commit.operation().getKey().get(0));
+            int serverV1 = server;
             for(int i = 0; i < 3; i++){
+                setClientPort(serverV1, true);
+                client.removeArestaControle(commit.operation().getValue(),false);
+                
+                setServer(commit.operation().getKey().get(1));
+                server += getAtom();
                 setClientPort();
-                client.removeAresta(commit.operation().getValue());
-                server += 3;
+                client.removeArestaReplica(commit.operation().getValue());
+
+                serverV1 += 3;
             }
         } finally {
             commit.release();
         }
     }
-
-    /*public List<Aresta> getListaArestasVertice(Commit<GetListaArestasVertice> commit) throws TException, ArestaNotFound {
-        try {
-            setClientPort(commit.operation().getVertice().getNome());
-            //Iterator<Aresta> it = 
-            return client.listaArestasVerticeControle(commit.operation().getVertice(),false);
-            //return it;
-        } finally {
-            commit.release();
-        }
-    }*/
 }

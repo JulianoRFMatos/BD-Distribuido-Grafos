@@ -83,7 +83,9 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
     }
 
     public boolean verificaId(int serverId){
-    	if(this.serverId == serverId%this.total_servidores)
+        if(this.serverId == serverId%this.total_servidores
+            || this.serverId == serverId%this.total_servidores - 3
+            || this.serverId == serverId%this.total_servidores - 6)
     		return true;
     	else
     		return false;
@@ -226,6 +228,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
             		removeArestaControle(it.next(),true);
             	}
                 hashVertices.remove(vertice.getNome());
+                System.out.println("\nVERTICE "+vertice.getNome()+" REMOVIDO");
                 inUse.set(false);
             }
         }
@@ -244,7 +247,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
             	buscaVerticeNomeControle(aresta.getFirstVert(),true);
             	buscaVerticeNomeControle(aresta.getSecondVert(),true);
 
-            	insereArestaReplica(aresta);
+            	//insereArestaReplica(aresta);
             	List<Integer> arestaKey = new ArrayList<>();
             	arestaKey.add(aresta.getFirstVert());
             	arestaKey.add(aresta.getSecondVert());
@@ -259,7 +262,7 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
             		return true;
             	}
             	else
-            		System.out.println("\ninserearesta falhou\n"
+            		System.out.println("\ninsereAresta falhou\n"
             			+"aresta 1 = "+aresta.getFirstVert()
             			+"\naresta 2 = "+aresta.getSecondVert()+"\n");
 
@@ -285,6 +288,11 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         		System.out.println("\nINSERIU REPLICA NO SERVER "+this.serverId+"\n");
         		return true;
         	}
+            else
+                System.out.println("\ninsereArestaReplica falhou\n"
+                    +"aresta 1 = "+aresta.getFirstVert()
+                    +"\naresta 2 = "+aresta.getSecondVert()
+                    +"\nserver = "+this.serverId);
         }
         return false;
     }
@@ -439,10 +447,24 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
         	clientHandler.removeAresta(aresta);
     	}
     	else {
-    		removeArestaReplica(aresta);
+            System.out.println("\nqqqqqqqqqqqq\n");
+            /*for(Iterator<Map.Entry<List<Integer>,Aresta>> it = hashArestas.entrySet().iterator(); it.hasNext();) {
+                 Map.Entry<List<Integer>,Aresta> entry = it.next();
+                 System.out.println("\n ARESTA ->> "+entry.getValue());
+                 if (entry.getValue().getFirstVert() == aresta.getFirstVert()
+                        && entry.getValue().getSecondVert() == aresta.getSecondVert()) {
+                        System.out.println("\nREMOVEU ARESTA EM ->> "+serverId);
+                      it.remove();
+                 }
+             }*/
+
+    		//removeArestaReplica(aresta);
     		List<Integer> arestaKey = new ArrayList<>();
+            System.out.println("\n criou arraylist\n");
         	arestaKey.add(aresta.getFirstVert());
+            System.out.println("\n add 1 \n");
         	arestaKey.add(aresta.getSecondVert());
+            System.out.println("\n add 2\n");
     		hashArestas.remove(arestaKey);
     		System.out.println("\nremoveu aresta em sv "+serverId);
     	}
@@ -505,10 +527,10 @@ public class GrafoHandlerHS implements GrafoBD.Iface {
 	        	for(Aresta a : listaArestasVertice(vertice)) {
 	        		System.out.println("\nARESTA "+a.getFirstVert());
 	        		if(a.getFirstVert() == vertice.getNome()) {
-	                	verticesVizinhos.add(buscaVerticeNome(a.getSecondVert()));
+	                	  verticesVizinhos.add(buscaVerticeNome(a.getSecondVert()));
 	                }
 	                if(a.getSecondVert() == vertice.getNome()) {
-	                	verticesVizinhos.add(buscaVerticeNome(a.getFirstVert()));
+	                	  verticesVizinhos.add(buscaVerticeNome(a.getFirstVert()));
 	                }
 	        	}
 	        }

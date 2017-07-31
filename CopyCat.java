@@ -31,6 +31,24 @@ public class CopyCat {
 
     }
 
+    public CopyCat criaClient() {
+        copycatClient = CopycatClient.builder()
+              .withTransport(NettyTransport.builder()
+                .withThreads(4)
+                .build())
+              .build();
+
+        copycatClient.connect(cluster_total).join();
+        
+        System.out.println("copycatClient criado!");
+
+        return this;
+    }
+
+    public CopycatClient getCopycatClient() {
+        return copycatClient;
+    }
+
     public void criaServers() {
         copycatServer1 = CopycatServer.builder(
                     new Address("localhost", 5000))
@@ -84,19 +102,5 @@ public class CopyCat {
         //copycatServer3.join(cluster_3).join();
 
         System.out.println("copycat sv3 criado..");*/
-    }
-
-    public CopyCat criaClient() {
-        copycatClient = CopycatClient.builder()
-              .withTransport(NettyTransport.builder()
-                .withThreads(4)
-                .build())
-              .build();
-
-        copycatClient.connect(cluster_total).join();
-        
-        System.out.println("copycatClient criado!");
-
-        return this;
     }
 }

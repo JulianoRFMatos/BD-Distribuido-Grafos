@@ -50,7 +50,7 @@ public class GrafoServer {
                     id.getAndIncrement();*/
                 
                 int n = i;
-                GrafoHandlerHS handler = new GrafoHandlerHS(3,id.get());
+                GrafoHandlerHS handler = new GrafoHandlerHS(nro_servers,id.get());
                 GrafoBD.Processor processor = new GrafoBD.Processor(handler);
                 
                 Runnable connectClient = new Runnable() {

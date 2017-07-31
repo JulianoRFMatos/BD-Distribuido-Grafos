@@ -4,7 +4,7 @@ import GrafoBD.*;
 
 import io.atomix.copycat.Query;
 
-public class GetListaArestasVertice implements Query<Aresta> {
+public class GetListaArestasVertice implements Query<Object> {
 
     private static final long serialVersionUID = 7083193252544827065L;
 
